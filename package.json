@@ -9,19 +9,32 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google/genai": "^1.7.0",
+    "@langchain/community": "^0.3.46",
+    "@langchain/openai": "^0.5.13",
+    "@langchain/pinecone": "^0.2.0",
+    "@llamaindex/openai": "^0.4.3",
+    "@llamaindex/pinecone": "^0.1.9",
+    "@pinecone-database/pinecone": "^6.1.1",
+    "CETEIcean": "^1.9.4",
+    "langchain": "^0.3.28",
+    "llamaindex": "^0.11.6",
+    "next": "15.3.3",
+    "pinecone-client": "^2.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next": "15.3.3"
+    "react-markdown": "^10.1.0",
+    "react-select": "^5.10.1"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
-    "@eslint/eslintrc": "^3"
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }
