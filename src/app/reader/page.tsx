@@ -288,65 +288,66 @@ export default function ChatPage() {
 
                     let text_behaviors = {
                         "tei": {
-                            "seg": (element) => {
-    // <seg> 要素の xml:id を取得
-    const xmlId = element.getAttribute('xml:id');
-    const matchingText = texts.value.find((text) => text.line === xmlId);
-    console.log(matchingText);
+                            //"seg": (element) => {
+                            "ana": (element) => {
+                                // <seg> 要素の xml:id を取得
+                                const xmlId = element.getAttribute('xml:id');
+                                const matchingText = texts.value.find((text) => text.line === xmlId);
+                                console.log(matchingText);
 
-    if (xmlId) {
-        // xml:id の値を表示するための <span> 要素を作成
-        const idSpan = document.createElement("span");
-        idSpan.textContent = `[${xmlId}] `;
-        idSpan.style.fontSize = "14px";
+                                if (xmlId) {
+                                    // xml:id の値を表示するための <span> 要素を作成
+                                    const idSpan = document.createElement("span");
+                                    idSpan.textContent = `[${xmlId}] `;
+                                    idSpan.style.fontSize = "14px";
 
-        // parentNodeの存在確認を追加
-        if (element.parentNode && element.parentNode.nodeType === Node.ELEMENT_NODE) {
-            try {
-                // <seg> 要素の前に <span> を挿入
-                element.parentNode.insertBefore(idSpan, element);
+                                    // parentNodeの存在確認を追加
+                                    if (element.parentNode && element.parentNode.nodeType === Node.ELEMENT_NODE) {
+                                        try {
+                                            // <seg> 要素の前に <span> を挿入
+                                            element.parentNode.insertBefore(idSpan, element);
 
-                if (matchingText && matchingText.commentary !== undefined && matchingText.commentary.length > 0) {
-                    // クリックイベントを追加
-                    idSpan.style.color = "blue";
-                    idSpan.style.cursor = "pointer";
-                    idSpan.addEventListener("click", () => {
-                        textClicked(xmlId);
-                    });
-                }
-            } catch (error) {
-                console.warn(`Error inserting span for ${xmlId}:`, error);
-                // フォールバック: 要素内に追加
-                try {
-                    element.insertBefore(idSpan, element.firstChild);
-                } catch (fallbackError) {
-                    console.warn(`Fallback also failed for ${xmlId}:`, fallbackError);
-                }
-            }
-        } else {
-            console.warn(`Invalid parentNode for element with xmlId: ${xmlId}`);
-            // 代替案: 要素内に追加
-            try {
-                element.insertBefore(idSpan, element.firstChild);
-                
-                if (matchingText && matchingText.commentary !== undefined && matchingText.commentary.length > 0) {
-                    idSpan.style.color = "blue";
-                    idSpan.style.cursor = "pointer";
-                    idSpan.addEventListener("click", () => {
-                        textClicked(xmlId);
-                    });
-                }
-            } catch (error) {
-                console.warn(`Alternative insertion failed for ${xmlId}:`, error);
-            }
-        }
-    }
+                                            if (matchingText && matchingText.commentary !== undefined && matchingText.commentary.length > 0) {
+                                                // クリックイベントを追加
+                                                idSpan.style.color = "blue";
+                                                idSpan.style.cursor = "pointer";
+                                                idSpan.addEventListener("click", () => {
+                                                    textClicked(xmlId);
+                                                });
+                                            }
+                                        } catch (error) {
+                                            console.warn(`Error inserting span for ${xmlId}:`, error);
+                                            // フォールバック: 要素内に追加
+                                            try {
+                                                element.insertBefore(idSpan, element.firstChild);
+                                            } catch (fallbackError) {
+                                                console.warn(`Fallback also failed for ${xmlId}:`, fallbackError);
+                                            }
+                                        }
+                                    } else {
+                                        console.warn(`Invalid parentNode for element with xmlId: ${xmlId}`);
+                                        // 代替案: 要素内に追加
+                                        try {
+                                            element.insertBefore(idSpan, element.firstChild);
 
-    // <seg> 要素に改行を適用
-    element.style.display = "block";
-    element.style.marginBottom = "10px";
-},
-                            "app": function(elt) {
+                                            if (matchingText && matchingText.commentary !== undefined && matchingText.commentary.length > 0) {
+                                                idSpan.style.color = "blue";
+                                                idSpan.style.cursor = "pointer";
+                                                idSpan.addEventListener("click", () => {
+                                                    textClicked(xmlId);
+                                                });
+                                            }
+                                        } catch (error) {
+                                            console.warn(`Alternative insertion failed for ${xmlId}:`, error);
+                                        }
+                                    }
+                                }
+
+                                // <seg> 要素に改行を適用
+                                element.style.display = "block";
+                                element.style.marginBottom = "10px";
+                            },
+                            "app": function (elt) {
                                 var lemElement = elt.querySelector("tei-lem");
                                 var rdgElement = elt.querySelector("tei-rdg");
                                 // rdgElementのwit属性の値を取得
@@ -382,11 +383,11 @@ export default function ChatPage() {
                                 popup.style.zIndex = "1000";
 
                                 // ホバーでポップアップ表示
-                                lemSpan.addEventListener("mouseenter", function() {
+                                lemSpan.addEventListener("mouseenter", function () {
                                     popup.style.display = "block";
                                 });
 
-                                lemSpan.addEventListener("mouseleave", function() {
+                                lemSpan.addEventListener("mouseleave", function () {
                                     popup.style.display = "none";
                                 });
 
@@ -394,7 +395,7 @@ export default function ChatPage() {
                                 container.appendChild(popup);
 
                                 return container;
-                                }
+                            }
                         }
                     };
 
@@ -411,35 +412,35 @@ export default function ChatPage() {
                     });
 
                     const textClicked = (xmlId) => {
-    // URL更新（ブラウザ履歴に追加）
-    const newUrl = `/reader/${encodeURIComponent(author)}/${encodeURIComponent(work)}/${encodeURIComponent(book)}/${encodeURIComponent(xmlId)}`;
-    window.history.pushState({}, '', newUrl);
+                        // URL更新（ブラウザ履歴に追加）
+                        const newUrl = `/reader/${encodeURIComponent(author)}/${encodeURIComponent(work)}/${encodeURIComponent(book)}/${encodeURIComponent(xmlId)}`;
+                        window.history.pushState({}, '', newUrl);
 
-    console.log(xmlId);
-    const matchingText = texts.value.find((text) => text.line === xmlId);
+                        console.log(xmlId);
+                        const matchingText = texts.value.find((text) => text.line === xmlId);
 
-    setCommentaryList([]); // commentary_listを初期化
+                        setCommentaryList([]); // commentary_listを初期化
 
-    // containerという要素を取得（1回だけ）
-    const container = document.getElementById("commentary_container");
-    
-    // container内のすべての子要素を削除
-    while (container.firstChild) {
-        container.removeChild(container.firstChild);
-    }
+                        // containerという要素を取得（1回だけ）
+                        const container = document.getElementById("commentary_container");
 
-    if (matchingText.commentary && matchingText.commentary.length > 0) {
-        console.log(`Found ${matchingText.commentary.length} commentaries`);
+                        // container内のすべての子要素を削除
+                        while (container.firstChild) {
+                            container.removeChild(container.firstChild);
+                        }
 
-        const endpoint = "https://dydra.com/junjun7613/humanitextonto/sparql";
+                        if (matchingText.commentary && matchingText.commentary.length > 0) {
+                            console.log(`Found ${matchingText.commentary.length} commentaries`);
 
-        // 各コメンタリーを順次処理
-        matchingText.commentary.forEach((commentary, commentaryIndex) => {
-            if (!commentary) return;
+                            const endpoint = "https://dydra.com/junjun7613/humanitextonto/sparql";
 
-            const c = new CETEI();
+                            // 各コメンタリーを順次処理
+                            matchingText.commentary.forEach((commentary, commentaryIndex) => {
+                                if (!commentary) return;
 
-            const query = `
+                                const c = new CETEI();
+
+                                const query = `
                 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
@@ -452,207 +453,207 @@ export default function ChatPage() {
                     ?work_uri rdfs:label ?work .
                 }
             `;
-            
-            const url = `${endpoint}?query=${encodeURIComponent(query)}&format=json`;
-            
-            fetch(url)
-                .then(res => res.json())
-                .then(data => {
-                    console.log(`Commentary ${commentaryIndex + 1} data:`, data);
 
-                    data.results.bindings.forEach((binding, bindingIndex) => {
-                        const dts_api = `https://humanitext-dts.vercel.app/api/dts/document?id=urn:${binding.annotator.value}.${binding.work.value}:${binding.book.value}&ref=${binding.seg.value}`;
-                        console.log(`Processing: ${dts_api}`);
+                                const url = `${endpoint}?query=${encodeURIComponent(query)}&format=json`;
 
-                        c.getHTML5(dts_api, function (data) {
-                            try {
-                                const body = data.getElementById(binding.seg.value);
-                                if (!body) {
-                                    console.error(`Body not found for ${binding.seg.value}`);
-                                    return;
-                                }
+                                fetch(url)
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        console.log(`Commentary ${commentaryIndex + 1} data:`, data);
 
-                                const stringBody = body.innerHTML;
-                                console.log(`Card ${commentaryIndex + 1}-${bindingIndex + 1} content:`, stringBody);
+                                        data.results.bindings.forEach((binding, bindingIndex) => {
+                                            const dts_api = `https://humanitext-dts.vercel.app/api/dts/document?id=urn:${binding.annotator.value}.${binding.work.value}:${binding.book.value}&ref=${binding.seg.value}`;
+                                            console.log(`Processing: ${dts_api}`);
 
-                                // cardを作成
-                                const card = document.createElement("div");
-                                card.style.marginBottom = "20px";
-                                card.style.border = "1px solid #ccc";
-                                card.style.borderRadius = "8px";
-                                card.setAttribute('data-commentary-index', `${commentaryIndex}-${bindingIndex}`);
+                                            c.getHTML5(dts_api, function (data) {
+                                                try {
+                                                    const body = data.getElementById(binding.seg.value);
+                                                    if (!body) {
+                                                        console.error(`Body not found for ${binding.seg.value}`);
+                                                        return;
+                                                    }
 
-                                // card header（タイトルのみ）を作成
-                                const cardHeader = document.createElement("div");
-                                cardHeader.style.padding = "15px 20px 10px 20px";
-                                cardHeader.style.backgroundColor = "#f8f9fa";
-                                cardHeader.style.borderBottom = "1px solid #e9ecef";
-                                cardHeader.style.borderRadius = "8px 8px 0 0";
+                                                    const stringBody = body.innerHTML;
+                                                    console.log(`Card ${commentaryIndex + 1}-${bindingIndex + 1} content:`, stringBody);
 
-                                // card titleを作成
-                                const cardTitle = document.createElement("h3");
-                                cardTitle.textContent = `${binding.annotator.value}: ${binding.work.value}:${binding.book.value}`;
-                                cardTitle.style.fontFamily = "Georgia, 'Times New Roman', Times, serif";
-                                cardTitle.style.fontSize = "18px";
-                                cardTitle.style.margin = "0";
-                                cardTitle.style.fontWeight = "600";
+                                                    // cardを作成
+                                                    const card = document.createElement("div");
+                                                    card.style.marginBottom = "20px";
+                                                    card.style.border = "1px solid #ccc";
+                                                    card.style.borderRadius = "8px";
+                                                    card.setAttribute('data-commentary-index', `${commentaryIndex}-${bindingIndex}`);
 
-                                // 表示/非表示切り替えボタンを作成
-                                const toggleButton = document.createElement("button");
-                                toggleButton.textContent = "表示";
-                                toggleButton.style.padding = "6px 12px";
-                                toggleButton.style.backgroundColor = "#007bff";
-                                toggleButton.style.color = "white";
-                                toggleButton.style.border = "none";
-                                toggleButton.style.borderRadius = "4px";
-                                toggleButton.style.cursor = "pointer";
-                                toggleButton.style.fontSize = "12px";
-                                toggleButton.style.fontWeight = "500";
-                                toggleButton.style.marginTop = "10px";
+                                                    // card header（タイトルのみ）を作成
+                                                    const cardHeader = document.createElement("div");
+                                                    cardHeader.style.padding = "15px 20px 10px 20px";
+                                                    cardHeader.style.backgroundColor = "#f8f9fa";
+                                                    cardHeader.style.borderBottom = "1px solid #e9ecef";
+                                                    cardHeader.style.borderRadius = "8px 8px 0 0";
 
-                                // card content（本文とボタン）を作成
-                                const cardContent = document.createElement("div");
-                                cardContent.style.display = "none";
+                                                    // card titleを作成
+                                                    const cardTitle = document.createElement("h3");
+                                                    cardTitle.textContent = `${binding.annotator.value}: ${binding.work.value}:${binding.book.value}`;
+                                                    cardTitle.style.fontFamily = "Georgia, 'Times New Roman', Times, serif";
+                                                    cardTitle.style.fontSize = "18px";
+                                                    cardTitle.style.margin = "0";
+                                                    cardTitle.style.fontWeight = "600";
 
-                                // card bodyを作成
-                                const cardBody = document.createElement("div");
-                                // bodyを複製して使用（DOM操作の競合を避けるため）
-                                cardBody.appendChild(body.cloneNode(true));
-                                cardBody.style.fontFamily = "Georgia, 'Times New Roman', Times, serif";
-                                cardBody.style.fontSize = "16px";
-                                cardBody.style.overflow = "auto";
-                                cardBody.style.maxHeight = "400px";
-                                cardBody.style.padding = "20px";
-                                cardBody.style.lineHeight = "1.6";
-                                cardBody.style.backgroundColor = "#ffffff";
+                                                    // 表示/非表示切り替えボタンを作成
+                                                    const toggleButton = document.createElement("button");
+                                                    toggleButton.textContent = "表示";
+                                                    toggleButton.style.padding = "6px 12px";
+                                                    toggleButton.style.backgroundColor = "#007bff";
+                                                    toggleButton.style.color = "white";
+                                                    toggleButton.style.border = "none";
+                                                    toggleButton.style.borderRadius = "4px";
+                                                    toggleButton.style.cursor = "pointer";
+                                                    toggleButton.style.fontSize = "12px";
+                                                    toggleButton.style.fontWeight = "500";
+                                                    toggleButton.style.marginTop = "10px";
 
-                                // card footerを作成
-                                const cardFooter = document.createElement("div");
-                                cardFooter.style.padding = "15px 20px";
-                                cardFooter.style.backgroundColor = "#f8f9fa";
-                                cardFooter.style.borderTop = "1px solid #e9ecef";
-                                cardFooter.style.borderRadius = "0 0 8px 8px";
-                                cardFooter.style.display = "flex";
-                                cardFooter.style.alignItems = "center";
-                                cardFooter.style.gap = "15px";
+                                                    // card content（本文とボタン）を作成
+                                                    const cardContent = document.createElement("div");
+                                                    cardContent.style.display = "none";
 
-                                // 言語選択肢を作成
-                                const langSelect = document.createElement("select");
-                                options.forEach(option => {
-                                    const opt = document.createElement("option");
-                                    opt.value = option.id;
-                                    opt.textContent = option.label;
-                                    langSelect.appendChild(opt);
-                                });
-                                langSelect.value = lang;
-                                langSelect.style.fontSize = "14px";
-                                langSelect.style.padding = "8px 12px";
-                                langSelect.style.border = "1px solid #ced4da";
-                                langSelect.style.borderRadius = "4px";
-                                langSelect.style.backgroundColor = "white";
-                                langSelect.style.cursor = "pointer";
+                                                    // card bodyを作成
+                                                    const cardBody = document.createElement("div");
+                                                    // bodyを複製して使用（DOM操作の競合を避けるため）
+                                                    cardBody.appendChild(body.cloneNode(true));
+                                                    cardBody.style.fontFamily = "Georgia, 'Times New Roman', Times, serif";
+                                                    cardBody.style.fontSize = "16px";
+                                                    cardBody.style.overflow = "auto";
+                                                    cardBody.style.maxHeight = "400px";
+                                                    cardBody.style.padding = "20px";
+                                                    cardBody.style.lineHeight = "1.6";
+                                                    cardBody.style.backgroundColor = "#ffffff";
 
-                                // 翻訳ボタンを作成
-                                const translateButton = document.createElement("button");
-                                translateButton.textContent = "Translation";
-                                translateButton.style.fontSize = "14px";
-                                translateButton.style.backgroundColor = "#17a2b8";
-                                translateButton.style.color = "white";
-                                translateButton.style.border = "none";
-                                translateButton.style.padding = "8px 16px";
-                                translateButton.style.borderRadius = "4px";
-                                translateButton.style.cursor = "pointer";
-                                translateButton.style.fontWeight = "500";
-                                translateButton.addEventListener("click", () => {
-                                    const currentLang = langSelect.value;
-                                    commentaryTranslate(stringBody, currentLang);
-                                });
+                                                    // card footerを作成
+                                                    const cardFooter = document.createElement("div");
+                                                    cardFooter.style.padding = "15px 20px";
+                                                    cardFooter.style.backgroundColor = "#f8f9fa";
+                                                    cardFooter.style.borderTop = "1px solid #e9ecef";
+                                                    cardFooter.style.borderRadius = "0 0 8px 8px";
+                                                    cardFooter.style.display = "flex";
+                                                    cardFooter.style.alignItems = "center";
+                                                    cardFooter.style.gap = "15px";
 
-                                // 要約ボタンを作成
-                                const summarizeButton = document.createElement("button");
-                                summarizeButton.textContent = "Summary";
-                                summarizeButton.style.fontSize = "14px";
-                                summarizeButton.style.backgroundColor = "#17a2b8";
-                                summarizeButton.style.color = "white";
-                                summarizeButton.style.border = "none";
-                                summarizeButton.style.padding = "8px 16px";
-                                summarizeButton.style.borderRadius = "4px";
-                                summarizeButton.style.cursor = "pointer";
-                                summarizeButton.style.fontWeight = "500";
-                                summarizeButton.addEventListener("click", () => {
-                                    const currentLang = langSelect.value;
-                                    commentarySummarize(stringBody, currentLang);
-                                });
+                                                    // 言語選択肢を作成
+                                                    const langSelect = document.createElement("select");
+                                                    options.forEach(option => {
+                                                        const opt = document.createElement("option");
+                                                        opt.value = option.id;
+                                                        opt.textContent = option.label;
+                                                        langSelect.appendChild(opt);
+                                                    });
+                                                    langSelect.value = lang;
+                                                    langSelect.style.fontSize = "14px";
+                                                    langSelect.style.padding = "8px 12px";
+                                                    langSelect.style.border = "1px solid #ced4da";
+                                                    langSelect.style.borderRadius = "4px";
+                                                    langSelect.style.backgroundColor = "white";
+                                                    langSelect.style.cursor = "pointer";
 
-                                // URLコピーボタンを作成
-                                const copyUrlButton = document.createElement("button");
-                                copyUrlButton.textContent = "Copy URL";
-                                copyUrlButton.style.fontSize = "14px";
-                                copyUrlButton.style.backgroundColor = "#6c757d";
-                                copyUrlButton.style.color = "white";
-                                copyUrlButton.style.border = "none";
-                                copyUrlButton.style.padding = "8px 16px";
-                                copyUrlButton.style.borderRadius = "4px";
-                                copyUrlButton.style.cursor = "pointer";
-                                copyUrlButton.style.fontWeight = "500";
-                                copyUrlButton.addEventListener("click", () => {
-                                    copyCommentaryUrl(xmlId);
-                                });
+                                                    // 翻訳ボタンを作成
+                                                    const translateButton = document.createElement("button");
+                                                    translateButton.textContent = "Translation";
+                                                    translateButton.style.fontSize = "14px";
+                                                    translateButton.style.backgroundColor = "#17a2b8";
+                                                    translateButton.style.color = "white";
+                                                    translateButton.style.border = "none";
+                                                    translateButton.style.padding = "8px 16px";
+                                                    translateButton.style.borderRadius = "4px";
+                                                    translateButton.style.cursor = "pointer";
+                                                    translateButton.style.fontWeight = "500";
+                                                    translateButton.addEventListener("click", () => {
+                                                        const currentLang = langSelect.value;
+                                                        commentaryTranslate(stringBody, currentLang);
+                                                    });
 
-                                // 表示/非表示の切り替え機能
-                                let isExpanded = false;
-                                toggleButton.addEventListener("click", () => {
-                                    isExpanded = !isExpanded;
-                                    if (isExpanded) {
-                                        cardContent.style.display = "block";
-                                        toggleButton.textContent = "非表示";
-                                        toggleButton.style.backgroundColor = "#6c757d";
-                                    } else {
-                                        cardContent.style.display = "none";
-                                        toggleButton.textContent = "表示";
-                                        toggleButton.style.backgroundColor = "#007bff";
-                                    }
-                                });
+                                                    // 要約ボタンを作成
+                                                    const summarizeButton = document.createElement("button");
+                                                    summarizeButton.textContent = "Summary";
+                                                    summarizeButton.style.fontSize = "14px";
+                                                    summarizeButton.style.backgroundColor = "#17a2b8";
+                                                    summarizeButton.style.color = "white";
+                                                    summarizeButton.style.border = "none";
+                                                    summarizeButton.style.padding = "8px 16px";
+                                                    summarizeButton.style.borderRadius = "4px";
+                                                    summarizeButton.style.cursor = "pointer";
+                                                    summarizeButton.style.fontWeight = "500";
+                                                    summarizeButton.addEventListener("click", () => {
+                                                        const currentLang = langSelect.value;
+                                                        commentarySummarize(stringBody, currentLang);
+                                                    });
 
-                                // 要素を組み立て
-                                cardHeader.appendChild(cardTitle);
-                                cardHeader.appendChild(toggleButton);
+                                                    // URLコピーボタンを作成
+                                                    const copyUrlButton = document.createElement("button");
+                                                    copyUrlButton.textContent = "Copy URL";
+                                                    copyUrlButton.style.fontSize = "14px";
+                                                    copyUrlButton.style.backgroundColor = "#6c757d";
+                                                    copyUrlButton.style.color = "white";
+                                                    copyUrlButton.style.border = "none";
+                                                    copyUrlButton.style.padding = "8px 16px";
+                                                    copyUrlButton.style.borderRadius = "4px";
+                                                    copyUrlButton.style.cursor = "pointer";
+                                                    copyUrlButton.style.fontWeight = "500";
+                                                    copyUrlButton.addEventListener("click", () => {
+                                                        copyCommentaryUrl(xmlId);
+                                                    });
 
-                                cardFooter.appendChild(langSelect);
-                                cardFooter.appendChild(translateButton);
-                                cardFooter.appendChild(summarizeButton);
-                                cardFooter.appendChild(copyUrlButton);
+                                                    // 表示/非表示の切り替え機能
+                                                    let isExpanded = false;
+                                                    toggleButton.addEventListener("click", () => {
+                                                        isExpanded = !isExpanded;
+                                                        if (isExpanded) {
+                                                            cardContent.style.display = "block";
+                                                            toggleButton.textContent = "非表示";
+                                                            toggleButton.style.backgroundColor = "#6c757d";
+                                                        } else {
+                                                            cardContent.style.display = "none";
+                                                            toggleButton.textContent = "表示";
+                                                            toggleButton.style.backgroundColor = "#007bff";
+                                                        }
+                                                    });
 
-                                cardContent.appendChild(cardBody);
-                                cardContent.appendChild(cardFooter);
+                                                    // 要素を組み立て
+                                                    cardHeader.appendChild(cardTitle);
+                                                    cardHeader.appendChild(toggleButton);
 
-                                card.appendChild(cardHeader);
-                                card.appendChild(cardContent);
+                                                    cardFooter.appendChild(langSelect);
+                                                    cardFooter.appendChild(translateButton);
+                                                    cardFooter.appendChild(summarizeButton);
+                                                    cardFooter.appendChild(copyUrlButton);
 
-                                // containerに追加
-                                container.appendChild(card);
-                                console.log(`Card ${commentaryIndex + 1}-${bindingIndex + 1} added to DOM`);
+                                                    cardContent.appendChild(cardBody);
+                                                    cardContent.appendChild(cardFooter);
 
-                                // setCommentaryListを正しいタイミングで実行
-                                setCommentaryList(prev => [...prev, {
-                                    annotator: binding.annotator.value,
-                                    book: binding.book.value,
-                                    work: binding.work.value,
-                                    content: stringBody
-                                }]);
+                                                    card.appendChild(cardHeader);
+                                                    card.appendChild(cardContent);
 
-                            } catch (error) {
-                                console.error(`Error processing card ${commentaryIndex + 1}-${bindingIndex + 1}:`, error);
-                            }
-                        });
-                    });
-                })
-                .catch(error => {
-                    console.error(`Error fetching commentary ${commentaryIndex + 1}:`, error);
-                });
-        });
-    }
-};
+                                                    // containerに追加
+                                                    container.appendChild(card);
+                                                    console.log(`Card ${commentaryIndex + 1}-${bindingIndex + 1} added to DOM`);
+
+                                                    // setCommentaryListを正しいタイミングで実行
+                                                    setCommentaryList(prev => [...prev, {
+                                                        annotator: binding.annotator.value,
+                                                        book: binding.book.value,
+                                                        work: binding.work.value,
+                                                        content: stringBody
+                                                    }]);
+
+                                                } catch (error) {
+                                                    console.error(`Error processing card ${commentaryIndex + 1}-${bindingIndex + 1}:`, error);
+                                                }
+                                            });
+                                        });
+                                    })
+                                    .catch(error => {
+                                        console.error(`Error fetching commentary ${commentaryIndex + 1}:`, error);
+                                    });
+                            });
+                        }
+                    };
                     // Google GenAIによる処理
                     // LLMProcess関数内の修正
                     const LLMProcess = async (text, mode, selectedLang) => {
@@ -852,7 +853,7 @@ export default function ChatPage() {
 
                     {/* 右列：コンテンツエリア */}
 
-                    <div id="commentary_container" className="flex-1 flex flex-col overflow-y-auto mb-4 rounded" />                                                                  
+                    <div id="commentary_container" className="flex-1 flex flex-col overflow-y-auto mb-4 rounded" />
 
 
                 </section>

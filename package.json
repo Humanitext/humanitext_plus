@@ -15,7 +15,7 @@
     "@langchain/pinecone": "^0.2.0",
     "@llamaindex/openai": "^0.4.3",
     "@llamaindex/pinecone": "^0.1.9",
-    "@pinecone-database/pinecone": "^6.1.1",
+    "@pinecone-database/pinecone": "^5.1.2",
     "CETEIcean": "^1.9.4",
     "langchain": "^0.3.28",
     "llamaindex": "^0.11.6",
