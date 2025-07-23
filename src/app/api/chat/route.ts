@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Pinecone } from "@pinecone-database/pinecone";
-import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
+//import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { PineconeStore } from "@langchain/pinecone";
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import { context } from "@pinecone-database/pinecone/dist/assistant/data/context";
+//import { context } from "@pinecone-database/pinecone/dist/assistant/data/context";
 
 const PINECONE_API_KEY = process.env.NEXT_PUBLIC_PINECONE_API_KEY!;
 const PINECONE_INDEX_NAME = process.env.NEXT_PUBLIC_PINECONE_INDEX_NAME!;
 const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY!;
 
-let message_history: { role: "user" | "assistant"; content: string }[] = [];
+const message_history: { role: "user" | "assistant"; content: string }[] = [];
 
 export async function POST(req: NextRequest) {
   const { question, mode, author, contextCount, model } = await req.json();
@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
     {
       context: async (input: { question: string }) => {
         const docs = await retriever.invoke(formattedQuestion);
-        console.log("Retrieved documents:", docs);
+        console.log(input.question, "retrieved documents:", docs);
         return docs.map(doc => doc.metadata?.original_text ?? "").join("\n");
       },
       question: (input: { question: string }) => input.question,
