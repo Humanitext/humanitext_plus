@@ -1,19 +1,21 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import ReactMarkdown from "react-markdown";
+//import ReactMarkdown from "react-markdown";
 import { useRouter } from "next/navigation";
-import Select, { ActionMeta, MultiValue } from 'react-select';  // 型定義を追加
+//import Select, { ActionMeta, MultiValue } from 'react-select';  // 型定義を追加
 import { GoogleGenAI } from "@google/genai";
 import CETEI from "CETEIcean";
 
 type DocInfo = { author: string; fileName: string; content: string };
 type Message = { role: "user" | "assistant"; text: string; contextDocs?: DocInfo[] };
 
+/*
 // Define the option type
 type GenreOption = {
     value: string;
     label: string;
 };
+*/
 
 type AuthorOption = {
     value: string;
@@ -43,7 +45,7 @@ export default function ChatPage() {
     const [book, setBook] = useState<string>(''); // 巻数の状態を追加
     const [contextCount, setContextCount] = useState(5); // デフォルト値5
     const [expandedDocs, setExpandedDocs] = useState<{ [key: string]: boolean }>({});
-    const [expandedContexts, setExpandedContexts] = useState<{ [key: number]: boolean }>({}); // 追加
+    //const [expandedContexts, setExpandedContexts] = useState<{ [key: number]: boolean }>({}); // 追加
 
     const [isMounted, setIsMounted] = useState(false);
 
@@ -74,7 +76,7 @@ export default function ChatPage() {
         setIsMounted(true);
     }, []);
 
-    const [selectedOption, setSelectedOption] = useState(null);
+    //const [selectedOption, setSelectedOption] = useState(null);
 
     const genre_author = {
         western_classics: ["Homer", "Plato", "Aristotle", "Cicero"],
@@ -170,8 +172,10 @@ export default function ChatPage() {
         [availableAuthors]
     );
 
+    /*
     // 全選択状態の管理
     const allSelected = author.length === availableAuthors.length;
+
 
     // Update the change handler with proper typing
     const handleAuthorChange = (
@@ -221,6 +225,7 @@ export default function ChatPage() {
             [docId]: !prev[docId],
         }));
     };
+    */
 
     // 「テクストを表示」ボタンのクリック処理を関数として定義
     const handleShowText = () => {
