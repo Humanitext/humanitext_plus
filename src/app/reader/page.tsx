@@ -150,7 +150,7 @@ export default function ChatPage() {
         fetch(url)
             .then(res => res.json())
             .then(data => {
-                const books = data.results.bindings.map((binding: any) => binding.book.value);
+                const books = data.results.bindings.map((binding: { book: { value: string } }) => binding.book.value);
                 setAvailableBooks(books);
             })
             .catch(() => setAvailableBooks([]));
@@ -289,10 +289,10 @@ export default function ChatPage() {
 
                     const CETEIcean = new CETEI()
 
-                    let text_behaviors = {
+                    const text_behaviors = {
                         "tei": {
                             //"seg": (element) => {
-                            "ana": (element) => {
+                            "ana": (element: HTMLElement) => {
                                 // <seg> 要素の xml:id を取得
                                 const xmlId = element.getAttribute('xml:id');
                                 const matchingText = texts.value.find((text) => text.line === xmlId);
@@ -350,9 +350,9 @@ export default function ChatPage() {
                                 element.style.display = "block";
                                 element.style.marginBottom = "10px";
                             },
-                            "app": function (elt) {
-                                const lemElement = elt.querySelector("tei-lem");
-                                const rdgElement = elt.querySelector("tei-rdg");
+                            "app": function (elt: HTMLElement) {
+                                const lemElement = elt.querySelector("tei-lem") as HTMLElement | null;
+                                const rdgElement = elt.querySelector("tei-rdg") as HTMLElement | null;
                                 // rdgElementのwit属性の値を取得
                                 const wit = rdgElement ? rdgElement.getAttribute("wit") : null;
 
