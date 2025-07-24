@@ -544,6 +544,7 @@ export default function ChatPage() {
                                                     cardTitle.style.fontSize = "18px";
                                                     cardTitle.style.margin = "0";
                                                     cardTitle.style.fontWeight = "600";
+                                                    cardTitle.style.overflowWrap = "break-word";
 
                                                     // 表示/非表示切り替えボタンを作成
                                                     const toggleButton = document.createElement("button");
