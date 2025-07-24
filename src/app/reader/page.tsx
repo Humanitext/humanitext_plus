@@ -289,7 +289,7 @@ export default function ChatPage() {
                     const xml_path = `https://humanitext-dts-data.vercel.app/xml/${author}/${work}/${book}.xml`;
                     console.log(xml_path);
 
-                    var CETEIcean = new CETEI()
+                    const CETEIcean = new CETEI()
 
                     let text_behaviors = {
                         "tei": {
@@ -353,16 +353,16 @@ export default function ChatPage() {
                                 element.style.marginBottom = "10px";
                             },
                             "app": function (elt) {
-                                var lemElement = elt.querySelector("tei-lem");
-                                var rdgElement = elt.querySelector("tei-rdg");
+                                const lemElement = elt.querySelector("tei-lem");
+                                const rdgElement = elt.querySelector("tei-rdg");
                                 // rdgElementのwit属性の値を取得
-                                var wit = rdgElement ? rdgElement.getAttribute("wit") : null;
+                                const wit = rdgElement ? rdgElement.getAttribute("wit") : null;
 
-                                var container = document.createElement("span");
+                                const container = document.createElement("span");
                                 container.style.position = "relative";
                                 container.style.display = "inline-block";
 
-                                var lemSpan = document.createElement("span");
+                                const lemSpan = document.createElement("span");
                                 lemSpan.innerHTML = lemElement ? lemElement.innerHTML : "";
                                 lemSpan.style.backgroundColor = "#f0f0f0"; // 背景色を薄いグレーに設定
                                 lemSpan.style.fontWeight = "bold"; // 太字に設定
@@ -370,7 +370,7 @@ export default function ChatPage() {
                                 lemSpan.style.cursor = "pointer";
                                 //lemSpan.style.color = "blue";
 
-                                var popup = document.createElement("div");
+                                const popup = document.createElement("div");
                                 //popup.innerHTML = rdgElement ? rdgElement.innerHTML : "";
                                 // innerHTMLに wit属性の値と rdgElementの内容を表示
                                 popup.innerHTML = wit ? `${wit}: ${rdgElement ? rdgElement.innerHTML : ""}` : rdgElement ? rdgElement.innerHTML : "";
