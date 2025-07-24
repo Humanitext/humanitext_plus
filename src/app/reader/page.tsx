@@ -17,11 +17,6 @@ type GenreOption = {
 };
 */
 
-type AuthorOption = {
-    value: string;
-    label: string;
-};
-
 const genAI = new GoogleGenAI({
     //apiKey: process.env.GOOGLE_GENAI_API_KEY
     apiKey: process.env.NEXT_PUBLIC_GENAI_API_KEY
@@ -31,20 +26,21 @@ export default function ChatPage() {
 
     const router = useRouter();
 
-    const [texts, setTexts] = useState<{ value: { line: string; commentary: string[] }[] }>({ value: [] });
+    //const [texts, setTexts] = useState<{ value: { line: string; commentary: string[] }[] }>({ value: [] });
+    const texts = { value: [] as { line: string; commentary: string[] }[] };
 
-    const [input, setInput] = useState("");
-    const [messages, setMessages] = useState<Message[]>([]);
+    //const [input, setInput] = useState("");
+    //const [messages, setMessages] = useState<Message[]>([]);
     // メタデータフィルター例（必要に応じて拡張）
-    const [filter, setFilter] = useState("");
-    const [mode, setMode] = useState("qa");
+    //const [filter, setFilter] = useState("");
+    //const [mode, setMode] = useState("qa");
     const [genre, setGenre] = useState<string>('');
-    const [model, setModel] = useState<string[]>(['gpt-4.1']); // 配列で管理
+    //const [model, setModel] = useState<string[]>(['gpt-4.1']); // 配列で管理
     const [author, setAuthor] = useState<string>('');
     const [work, setWork] = useState<string>('');
     const [book, setBook] = useState<string>(''); // 巻数の状態を追加
-    const [contextCount, setContextCount] = useState(5); // デフォルト値5
-    const [expandedDocs, setExpandedDocs] = useState<{ [key: string]: boolean }>({});
+    //const [contextCount, setContextCount] = useState(5); // デフォルト値5
+    //const [expandedDocs, setExpandedDocs] = useState<{ [key: string]: boolean }>({});
     //const [expandedContexts, setExpandedContexts] = useState<{ [key: number]: boolean }>({}); // 追加
 
     const [isMounted, setIsMounted] = useState(false);
