@@ -49,10 +49,10 @@ interface CommentaryDetail {
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { author: string; work: string; book: string; line: string } }
+    { params }: { params: Promise<{ author: string; work: string; book: string; line: string }> }
 ) {
     try {
-        const { author, work, book, line } = params;
+        const { author, work, book, line } = await params;
         
         // URLデコード
         const authorParam = decodeURIComponent(author);
@@ -88,7 +88,7 @@ export async function GET(
 
         // 2. textsデータを構築
         //const textsData: { line: string; commentary: string[] }[] = [];
-        const textsData: TextData[] = [];
+        const textsData: TextData[] = [];   
         data.results.bindings.forEach((binding: SPARQLResult) => {
             const existingText = textsData.find((text) => text.line === binding.line.value);
             if (existingText) {
