@@ -20,8 +20,8 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   // メタデータフィルター例（必要に応じて拡張）
-  const [filter, setFilter] = useState("");
-  //const filter = useState("");
+  //const [filter, setFilter] = useState("");
+  const filter = "";
   const [mode, setMode] = useState("qa");
   const [genre, setGenre] = useState<string[]>([]); // 配列で管理
   const [model, setModel] = useState<string[]>(['gpt-4.1']); // 配列で管理
