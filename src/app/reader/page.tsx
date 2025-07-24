@@ -523,12 +523,16 @@ export default function ChatPage() {
                                                     const stringBody = body.innerHTML;
                                                     console.log(`Card ${commentaryIndex + 1}-${bindingIndex + 1} content:`, stringBody);
 
-                                                    // cardを作成
-                                                    const card = document.createElement("div");
-                                                    card.style.marginBottom = "20px";
-                                                    card.style.border = "1px solid #ccc";
-                                                    card.style.borderRadius = "8px";
-                                                    card.setAttribute('data-commentary-index', `${commentaryIndex}-${bindingIndex}`);
+                                                    // cardを作成（幅制限を追加）
+const card = document.createElement("div");
+card.style.marginBottom = "20px";
+card.style.border = "1px solid #ccc";
+card.style.borderRadius = "8px";
+card.style.overflow = "hidden";
+card.style.maxWidth = "100%";
+card.style.width = "100%";          // 追加: 幅を100%に設定
+card.style.boxSizing = "border-box"; // 追加: ボックスサイジング
+card.setAttribute('data-commentary-index', `${commentaryIndex}-${bindingIndex}`);
 
                                                     // card header（タイトルのみ）を作成
                                                     const cardHeader = document.createElement("div");
@@ -580,7 +584,6 @@ export default function ChatPage() {
 
                                                     // レスポンシブ対応版
 const isSmallScreen = window.innerWidth < 768;
-const isMediumScreen = window.innerWidth < 1024;
 
 // card footerを作成（レスポンシブ対応）
 const cardFooter = document.createElement("div");
