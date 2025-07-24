@@ -49,7 +49,7 @@ export default function CommentaryPage() {
     const router = useRouter();
     const { author, work, book, line } = params;
 
-    const [texts, setTexts] = useState<{ value: { line: string; commentary: string[] }[] }>({ value: [] });
+    //const [texts, setTexts] = useState<{ value: { line: string; commentary: string[] }[] }>({ value: [] });
     const [isLoading, setIsLoading] = useState(true);
     const [lang, setLang] = useState<string>('Japanese');
     const [processedText, setProcessedText] = useState<string>('');
@@ -160,7 +160,7 @@ export default function CommentaryPage() {
             const data = await response.json() as SPARQLResponse;
 
             // 2. textsデータを構築
-            const textsData: { line: string; commentary: string[] }[] = [];
+            const textsData: TextData[] = [];
             data.results.bindings.forEach((binding: SPARQLResult) => {
                 const existingText = textsData.find((text) => text.line === binding.line.value);
                 if (existingText) {
@@ -173,7 +173,7 @@ export default function CommentaryPage() {
                 }
             });
 
-            setTexts({ value: textsData });
+            //setTexts({ value: textsData });
 
             // 3. TEIテキストを表示
             await displayTEIText(authorParam, workParam, bookParam, textsData, lineParam);
@@ -387,7 +387,7 @@ export default function CommentaryPage() {
             const url = `${endpoint}?query=${encodeURIComponent(query)}&format=json`;
             fetch(url)
                 .then(res => res.json())
-                .then(data => {
+                .then((data: CommentaryResponse) => {
                     data.results.bindings.forEach((binding: CommentaryBinding) => {
                         const dts_api = `https://humanitext-dts.vercel.app/api/dts/document?id=urn:${binding.annotator.value}.${binding.work.value}:${binding.book.value}&ref=${binding.seg.value}`;
 
