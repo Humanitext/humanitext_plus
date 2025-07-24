@@ -316,16 +316,6 @@ export default function CommentaryPage() {
                 targetElement.style.boxShadow = 'none';
             }, 2000);
         }
-    } else {
-        console.warn(`Target element not found: ${targetLine}`);
-        // 再試行（最大5回）
-        const retryCount = (window as any).scrollRetryCount || 0;
-        if (retryCount < 5) {
-            (window as any).scrollRetryCount = retryCount + 1;
-            setTimeout(() => {
-                scrollToTargetLine(targetLine);
-            }, 1000);
-        }
     }
 };
 
