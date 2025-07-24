@@ -20,8 +20,8 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   // メタデータフィルター例（必要に応じて拡張）
-  //const [filter, setFilter] = useState("");
-  const filter = useState("");
+  const [filter, setFilter] = useState("");
+  //const filter = useState("");
   const [mode, setMode] = useState("qa");
   const [genre, setGenre] = useState<string[]>([]); // 配列で管理
   const [model, setModel] = useState<string[]>(['gpt-4.1']); // 配列で管理
@@ -108,7 +108,7 @@ const handleSelectAll = (checked: boolean) => {
 */
 
   // mode変更時にAPIへ送信
-  useEffect(() => {
+useEffect(() => {
     if (!mode) return;
     // 必要に応じて他の条件も追加
     fetch("/api/chat", {
@@ -116,16 +116,27 @@ const handleSelectAll = (checked: boolean) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question: input, mode: mode, author: author, contextCount, filter, model: model }),
     })
-      .then(res => res.json())
-      .then(data => {
-        // 必要に応じてmessagesや他のstateを更新
-        // 例: setMessages(msgs => [...msgs, { role: "assistant", text: data.answer }]);
-        console.log("Mode changed, API Response:", data);
+      .then(async (res) => {
+        // レスポンスの内容をチェック
+        const text = await res.text();
+        
+        if (!text) {
+          console.log("Mode changed, empty response received");
+          return;
+        }
+        
+        try {
+          const data = JSON.parse(text);
+          console.log("Mode changed, API Response:", data);
+        } catch (jsonError) {
+          console.error("Invalid JSON response:", text);
+          console.error("JSON parse error:", jsonError);
+        }
       })
       .catch(err => {
         console.error("Mode change API error:", err);
       });
-  }, [mode, author, filter]);
+}, [mode, author, filter]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
