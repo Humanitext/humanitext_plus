@@ -4,6 +4,42 @@ import { useEffect, useState } from 'react';
 import CETEI from "CETEIcean";
 import { GoogleGenAI } from "@google/genai";
 
+// 型定義を追加
+interface SPARQLBinding {
+    type: string;
+    value: string;
+}
+
+interface SPARQLResult {
+    text?: SPARQLBinding;
+    line: SPARQLBinding;
+    commentary?: SPARQLBinding;
+}
+
+interface SPARQLResponse {
+    results: {
+        bindings: SPARQLResult[];
+    };
+}
+
+interface CommentaryBinding {
+    seg: SPARQLBinding;
+    annotator: SPARQLBinding;
+    work: SPARQLBinding;
+    book: SPARQLBinding;
+}
+
+interface CommentaryResponse {
+    results: {
+        bindings: CommentaryBinding[];
+    };
+}
+
+interface TextData {
+    line: string;
+    commentary: string[];
+}
+
 const genAI = new GoogleGenAI({
     apiKey: process.env.NEXT_PUBLIC_GENAI_API_KEY || ""
 });
@@ -121,14 +157,14 @@ export default function CommentaryPage() {
 
             const url = `${endpoint}?query=${encodeURIComponent(query)}&format=json`;
             const response = await fetch(url);
-            const data = await response.json();
+            const data = await response.json() as SPARQLResponse;
 
             // 2. textsデータを構築
             const textsData: { line: string; commentary: string[] }[] = [];
-            data.results.bindings.forEach((binding: any) => {
+            data.results.bindings.forEach((binding: SPARQLResult) => {
                 const existingText = textsData.find((text) => text.line === binding.line.value);
                 if (existingText) {
-                    existingText.commentary.push(binding.commentary ? binding.commentary.value : null);
+                    existingText.commentary.push(binding.commentary ? binding.commentary.value : '');
                 } else {
                     textsData.push({
                         line: binding.line.value,
@@ -155,13 +191,13 @@ export default function CommentaryPage() {
 
     };
 
-    const displayTEIText = async (authorParam: string, workParam: string, bookParam: string, textsData: any[], targetLine?: string) => {
+    const displayTEIText = async (authorParam: string, workParam: string, bookParam: string, textsData: TextData[], targetLine?: string) => {
         const xml_path = `https://humanitext-dts-data.vercel.app/xml/${authorParam}/${workParam}/${bookParam}.xml`;
         const CETEIcean = new CETEI();
 
         const text_behaviors = {
             "tei": {
-                "seg": (element: any) => {
+                "seg": (element: HTMLElement) => {
                     const xmlId = element.getAttribute('xml:id');
                     if (xmlId) {
                         const idSpan = document.createElement("span");
@@ -251,7 +287,7 @@ export default function CommentaryPage() {
         };
 
         CETEIcean.addBehaviors(text_behaviors);
-        CETEIcean.getHTML5(xml_path, function (data: any) {
+        CETEIcean.getHTML5(xml_path, function (data: Document) {
             const body = data.getElementById(bookParam);
             const teiElem = document.getElementById("TEI");
             if (teiElem && body) {
@@ -317,7 +353,7 @@ export default function CommentaryPage() {
         }
     };
 
-    const displayCommentary = (xmlId: string, textsData: any[]) => {
+    const displayCommentary = (xmlId: string, textsData: TextData[]) => {
         const matchingText = textsData.find((text) => text.line === xmlId);
         const container = document.getElementById("commentary_container");
 
@@ -352,10 +388,10 @@ export default function CommentaryPage() {
             fetch(url)
                 .then(res => res.json())
                 .then(data => {
-                    data.results.bindings.forEach((binding: any) => {
+                    data.results.bindings.forEach((binding: CommentaryBinding) => {
                         const dts_api = `https://humanitext-dts.vercel.app/api/dts/document?id=urn:${binding.annotator.value}.${binding.work.value}:${binding.book.value}&ref=${binding.seg.value}`;
 
-                        c.getHTML5(dts_api, function (data: any) {
+                        c.getHTML5(dts_api, function (data: Document) {
                             const body = data.getElementById(binding.seg.value);
                             if (body) {
                                 createCommentaryCard(binding, body, xmlId, container);
@@ -366,7 +402,7 @@ export default function CommentaryPage() {
         });
     };
 
-    const createCommentaryCard = (binding: any, body: any, xmlId: string, container: any) => {
+    const createCommentaryCard = (binding: CommentaryBinding, body: HTMLElement, xmlId: string, container: HTMLElement) => {
         const stringBody = body.innerHTML;
 
         // カード作成
