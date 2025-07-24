@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { GoogleGenAI } from "@google/genai";
 import CETEI from "CETEIcean";
 
-type DocInfo = { author: string; fileName: string; content: string };
+//type DocInfo = { author: string; fileName: string; content: string };
 
 /*
 // Define the option type
@@ -48,9 +48,10 @@ export default function ChatPage() {
 
     //const teiContent = useState<string>('');
 
-    const [lang, setLang] = useState<string>('Japanese'); // 言語選択の状態を追加
+    //const [lang, setLang] = useState<string>('Japanese'); // 言語選択の状態を追加
+    const lang = 'Japanese';
 
-    const [options, setOptions] = useState<{ id: string; label: string }[]>([
+    const options = [
         { id: 'Japanese', label: 'Japanese' },
         { id: 'English', label: 'English' },
         { id: 'French', label: 'French' },
@@ -61,7 +62,7 @@ export default function ChatPage() {
         { id: 'Russian', label: 'Russian' },
         { id: 'Greek', label: 'Greek' },
         { id: 'Latin', label: 'Latin' }
-    ]);
+    ];
 
     const [processedText, setProcessedText] = useState<string>('');
     const [isTransSummDialogOpen, setIsTransSummDialogOpen] = useState<boolean>(false);
@@ -258,7 +259,7 @@ export default function ChatPage() {
                     data.results.bindings.forEach((binding) => {
 
                         //dts apiを使用して、texts.value.descriptionにテクストを追加
-                        const url = `https://humanitext-dts.vercel.app/api/dts/document?id=urn:${author}.${work}:${book}&ref=${binding.line.value}`;
+                        //const url = `https://humanitext-dts.vercel.app/api/dts/document?id=urn:${author}.${work}:${book}&ref=${binding.line.value}`;
                         //console.log(url);
                         // urlで問い合わせてデータを取得
 
