@@ -197,7 +197,7 @@ export default function CommentaryPage() {
 
         const text_behaviors = {
             "tei": {
-                "ab": (element: HTMLElement) => {
+                "ana": (element: HTMLElement) => {
                     const xmlId = element.getAttribute('xml:id');
                     if (xmlId) {
                         const idSpan = document.createElement("span");
