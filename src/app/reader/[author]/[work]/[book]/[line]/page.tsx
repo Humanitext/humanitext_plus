@@ -215,7 +215,14 @@ export default function CommentaryPage() {
                             element.id = `target-element-${xmlId}`;
                         }
 
-                        element.parentNode.insertBefore(idSpan, element);
+                        // parentNodeのnullチェックを追加
+                        if (element.parentNode) {
+                            element.parentNode.insertBefore(idSpan, element);
+                        } else {
+                            console.warn(`Parent node not found for element with xmlId: ${xmlId}`);
+                            // 代替手段として、elementの前に挿入できない場合の処理
+                            // 例: elementの隣に追加するなど
+                        }
 
                         const matchingText = textsData.find((text) => text.line === xmlId);
                         if (matchingText && matchingText.commentary && matchingText.commentary.length > 0) {
@@ -232,17 +239,17 @@ export default function CommentaryPage() {
                     element.style.display = "block";
                     element.style.marginBottom = "10px";
                 },
-                "app": function(elt) {
-                                var lemElement = elt.querySelector("tei-lem");
-                                var rdgElement = elt.querySelector("tei-rdg");
+                "app": function(elt: HTMLElement) {
+                                const lemElement = elt.querySelector("tei-lem");
+                                const rdgElement = elt.querySelector("tei-rdg");
                                 // rdgElementのwit属性の値を取得
-                                var wit = rdgElement ? rdgElement.getAttribute("wit") : null;
+                                const wit = rdgElement ? rdgElement.getAttribute("wit") : null;
 
-                                var container = document.createElement("span");
+                                const container = document.createElement("span");
                                 container.style.position = "relative";
                                 container.style.display = "inline-block";
 
-                                var lemSpan = document.createElement("span");
+                                const lemSpan = document.createElement("span");
                                 lemSpan.innerHTML = lemElement ? lemElement.innerHTML : "";
                                 lemSpan.style.backgroundColor = "#f0f0f0"; // 背景色を薄いグレーに設定
                                 lemSpan.style.fontWeight = "bold"; // 太字に設定
@@ -250,7 +257,7 @@ export default function CommentaryPage() {
                                 lemSpan.style.cursor = "pointer";
                                 //lemSpan.style.color = "blue";
 
-                                var popup = document.createElement("div");
+                                const popup = document.createElement("div");
                                 //popup.innerHTML = rdgElement ? rdgElement.innerHTML : "";
                                 // innerHTMLに wit属性の値と rdgElementの内容を表示
                                 popup.innerHTML = wit ? `${wit}: ${rdgElement ? rdgElement.innerHTML : ""}` : rdgElement ? rdgElement.innerHTML : "";
