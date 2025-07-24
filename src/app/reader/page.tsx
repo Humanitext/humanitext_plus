@@ -528,7 +528,6 @@ const card = document.createElement("div");
 card.style.marginBottom = "20px";
 card.style.border = "1px solid #ccc";
 card.style.borderRadius = "8px";
-card.style.overflow = "hidden";
 card.style.maxWidth = "100%";
 card.style.width = "100%";          // 追加: 幅を100%に設定
 card.style.boxSizing = "border-box"; // 追加: ボックスサイジング
