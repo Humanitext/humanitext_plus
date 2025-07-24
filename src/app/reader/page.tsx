@@ -524,14 +524,14 @@ export default function ChatPage() {
                                                     console.log(`Card ${commentaryIndex + 1}-${bindingIndex + 1} content:`, stringBody);
 
                                                     // cardを作成（幅制限を追加）
-const card = document.createElement("div");
-card.style.marginBottom = "20px";
-card.style.border = "1px solid #ccc";
-card.style.borderRadius = "8px";
-card.style.maxWidth = "100%";
-card.style.width = "100%";          // 追加: 幅を100%に設定
-card.style.boxSizing = "border-box"; // 追加: ボックスサイジング
-card.setAttribute('data-commentary-index', `${commentaryIndex}-${bindingIndex}`);
+                                                    const card = document.createElement("div");
+                                                    card.style.marginBottom = "20px";
+                                                    card.style.border = "1px solid #ccc";
+                                                    card.style.borderRadius = "8px";
+                                                    card.style.maxWidth = "100%";
+                                                    card.style.width = "100%";          // 追加: 幅を100%に設定
+                                                    card.style.boxSizing = "border-box"; // 追加: ボックスサイジング
+                                                    card.setAttribute('data-commentary-index', `${commentaryIndex}-${bindingIndex}`);
 
                                                     // card header（タイトルのみ）を作成
                                                     const cardHeader = document.createElement("div");
@@ -807,7 +807,7 @@ copyUrlButton.addEventListener("click", () => {
     };
 
     return (
-        <main className="w-full min-h-screen bg-white px-4 sm:px-8 md:px-16 lg:px-32 xl:px-48 py-8 box-border">
+        <main className="w-full min-h-screen bg-white px-2 sm:px-4 md:px-6 lg:px-8 xl:px-12 py-8 box-border">
             <h1 className="text-2xl font-bold mb-8">
                 {/* ここに画像を挿入する場合は、<img src="/path/to/image.png" alt="Logo" className="inline-block h-8" /> */}
                 <img
