@@ -578,82 +578,96 @@ export default function ChatPage() {
                                                     cardBody.style.lineHeight = "1.6";
                                                     cardBody.style.backgroundColor = "#ffffff";
 
-                                                    // card footerを作成
-                                                    const cardFooter = document.createElement("div");
-                                                    cardFooter.style.padding = "15px 20px";
-                                                    cardFooter.style.backgroundColor = "#f8f9fa";
-                                                    cardFooter.style.borderTop = "1px solid #e9ecef";
-                                                    cardFooter.style.borderRadius = "0 0 8px 8px";
-                                                    cardFooter.style.display = "flex";
-                                                    cardFooter.style.alignItems = "center";
-                                                    cardFooter.style.gap = "15px";
-                                                    cardFooter.style.overflowWrap = "break-word";
-                                                    cardFooter.style.whiteSpace = "normal";
-                                                    cardFooter.style.lineHeight = "1.4";
-                                                    cardFooter.style.maxWidth = "100%";
+                                                    // レスポンシブ対応版
+const isSmallScreen = window.innerWidth < 768;
+const isMediumScreen = window.innerWidth < 1024;
 
-                                                    // 言語選択肢を作成
-                                                    const langSelect = document.createElement("select");
-                                                    options.forEach(option => {
-                                                        const opt = document.createElement("option");
-                                                        opt.value = option.id;
-                                                        opt.textContent = option.label;
-                                                        langSelect.appendChild(opt);
-                                                    });
-                                                    langSelect.value = lang;
-                                                    langSelect.style.fontSize = "14px";
-                                                    langSelect.style.padding = "8px 12px";
-                                                    langSelect.style.border = "1px solid #ced4da";
-                                                    langSelect.style.borderRadius = "4px";
-                                                    langSelect.style.backgroundColor = "white";
-                                                    langSelect.style.cursor = "pointer";
+// card footerを作成（レスポンシブ対応）
+const cardFooter = document.createElement("div");
+cardFooter.style.padding = isSmallScreen ? "10px 15px" : "15px 20px";
+cardFooter.style.backgroundColor = "#f8f9fa";
+cardFooter.style.borderTop = "1px solid #e9ecef";
+cardFooter.style.borderRadius = "0 0 8px 8px";
+cardFooter.style.display = "flex";
+cardFooter.style.flexWrap = "wrap";
+cardFooter.style.alignItems = "center";
+cardFooter.style.gap = isSmallScreen ? "6px" : "10px";
+cardFooter.style.justifyContent = "flex-start";
+cardFooter.style.maxWidth = "100%";
 
-                                                    // 翻訳ボタンを作成
-                                                    const translateButton = document.createElement("button");
-                                                    translateButton.textContent = "Translation";
-                                                    translateButton.style.fontSize = "14px";
-                                                    translateButton.style.backgroundColor = "#17a2b8";
-                                                    translateButton.style.color = "white";
-                                                    translateButton.style.border = "none";
-                                                    translateButton.style.padding = "8px 16px";
-                                                    translateButton.style.borderRadius = "4px";
-                                                    translateButton.style.cursor = "pointer";
-                                                    translateButton.style.fontWeight = "500";
-                                                    translateButton.addEventListener("click", () => {
-                                                        const currentLang = langSelect.value;
-                                                        commentaryTranslate(stringBody, currentLang);
-                                                    });
+// 共通のボタンスタイル
+const baseButtonStyle = {
+    fontSize: isSmallScreen ? "12px" : "13px",
+    padding: isSmallScreen ? "5px 10px" : "6px 12px",
+    borderRadius: "4px",
+    cursor: "pointer",
+    fontWeight: "500",
+    border: "none",
+    whiteSpace: "nowrap" as const,
+    flexShrink: "0"
+};
 
-                                                    // 要約ボタンを作成
-                                                    const summarizeButton = document.createElement("button");
-                                                    summarizeButton.textContent = "Summary";
-                                                    summarizeButton.style.fontSize = "14px";
-                                                    summarizeButton.style.backgroundColor = "#17a2b8";
-                                                    summarizeButton.style.color = "white";
-                                                    summarizeButton.style.border = "none";
-                                                    summarizeButton.style.padding = "8px 16px";
-                                                    summarizeButton.style.borderRadius = "4px";
-                                                    summarizeButton.style.cursor = "pointer";
-                                                    summarizeButton.style.fontWeight = "500";
-                                                    summarizeButton.addEventListener("click", () => {
-                                                        const currentLang = langSelect.value;
-                                                        commentarySummarize(stringBody, currentLang);
-                                                    });
+// 言語選択肢を作成（レスポンシブ対応）
+const langSelect = document.createElement("select");
+options.forEach(option => {
+    const opt = document.createElement("option");
+    opt.value = option.id;
+    opt.textContent = option.label;
+    langSelect.appendChild(opt);
+});
+langSelect.value = lang;
+Object.assign(langSelect.style, {
+    fontSize: baseButtonStyle.fontSize,
+    padding: baseButtonStyle.padding,
+    border: "1px solid #ced4da",
+    borderRadius: "4px",
+    backgroundColor: "white",
+    cursor: "pointer",
+    minWidth: isSmallScreen ? "100px" : "120px",
+    maxWidth: isSmallScreen ? "120px" : "150px",
+    flexShrink: "0"
+});
 
-                                                    // URLコピーボタンを作成
-                                                    const copyUrlButton = document.createElement("button");
-                                                    copyUrlButton.textContent = "Copy URL";
-                                                    copyUrlButton.style.fontSize = "14px";
-                                                    copyUrlButton.style.backgroundColor = "#6c757d";
-                                                    copyUrlButton.style.color = "white";
-                                                    copyUrlButton.style.border = "none";
-                                                    copyUrlButton.style.padding = "8px 16px";
-                                                    copyUrlButton.style.borderRadius = "4px";
-                                                    copyUrlButton.style.cursor = "pointer";
-                                                    copyUrlButton.style.fontWeight = "500";
-                                                    copyUrlButton.addEventListener("click", () => {
-                                                        copyCommentaryUrl(xmlId);
-                                                    });
+// 翻訳ボタンを作成（レスポンシブ対応）
+const translateButton = document.createElement("button");
+translateButton.textContent = isSmallScreen ? "Trans" : "Translation";
+Object.assign(translateButton.style, baseButtonStyle, {
+    backgroundColor: "#17a2b8",
+    color: "white",
+    minWidth: isSmallScreen ? "50px" : "80px",
+    maxWidth: isSmallScreen ? "70px" : "100px"
+});
+translateButton.addEventListener("click", () => {
+    const currentLang = langSelect.value;
+    commentaryTranslate(stringBody, currentLang);
+});
+
+// 要約ボタンを作成（レスポンシブ対応）
+const summarizeButton = document.createElement("button");
+summarizeButton.textContent = isSmallScreen ? "Sum" : "Summary";
+Object.assign(summarizeButton.style, baseButtonStyle, {
+    backgroundColor: "#17a2b8",
+    color: "white",
+    minWidth: isSmallScreen ? "40px" : "70px",
+    maxWidth: isSmallScreen ? "60px" : "90px"
+});
+summarizeButton.addEventListener("click", () => {
+    const currentLang = langSelect.value;
+    commentarySummarize(stringBody, currentLang);
+});
+
+// URLコピーボタンを作成（レスポンシブ対応）
+const copyUrlButton = document.createElement("button");
+copyUrlButton.textContent = isSmallScreen ? "Copy" : "Copy URL";
+Object.assign(copyUrlButton.style, baseButtonStyle, {
+    backgroundColor: "#6c757d",
+    color: "white",
+    minWidth: isSmallScreen ? "45px" : "70px",
+    maxWidth: isSmallScreen ? "65px" : "90px"
+});
+copyUrlButton.addEventListener("click", () => {
+    copyCommentaryUrl(xmlId);
+});
 
                                                     // 表示/非表示の切り替え機能
                                                     let isExpanded = false;
