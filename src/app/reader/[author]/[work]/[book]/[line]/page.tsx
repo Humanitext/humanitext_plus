@@ -130,194 +130,235 @@ export default function CommentaryPage() {
     };
 
     const handleShowTextWithLine = async (authorParam: string, workParam: string, bookParam: string, lineParam: string) => {
-    setIsLoading(true);
-    console.log('Starting handleShowTextWithLine with params:', { authorParam, workParam, bookParam, lineParam });
+        setIsLoading(true);
 
-    try {
-        // 1. SPARQLクエリでデータを取得
-        const endpoint = "https://dydra.com/junjun7613/humanitextonto/sparql";
-        const query = `
-            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        try {
+            // 1. SPARQLクエリでデータを取得
+            const endpoint = "https://dydra.com/junjun7613/humanitextonto/sparql";
+            const query = `
+                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-            SELECT DISTINCT ?text ?line ?commentary WHERE {
-            ?author a <http://example.org/vocabulary/Author> ;
-                    rdfs:label "${authorParam}" .
-            ?work a <http://example.org/vocabulary/Work> ;
-                    rdfs:label "${workParam}" ;
-                    <http://purl.org/dc/elements/1.1/creator> ?author .
-            ?text a <http://example.org/vocabulary/Text>;
-                <http://example.org/vocabulary/correspondingWork> ?work ;
-                <http://example.org/vocabulary/correspondingBook> "${bookParam}" ;
-                <http://purl.org/dc/elements/1.1/creator> ?author.
-            ?text <http://example.org/vocabulary/correspondingSeg> ?line .
+                SELECT DISTINCT ?text ?line ?commentary WHERE {
+                ?author a <http://example.org/vocabulary/Author> ;
+                        rdfs:label "${authorParam}" .
+                ?work a <http://example.org/vocabulary/Work> ;
+                        rdfs:label "${workParam}" ;
+                        <http://purl.org/dc/elements/1.1/creator> ?author .
+                ?text a <http://example.org/vocabulary/Text>;
+                    <http://example.org/vocabulary/correspondingWork> ?work ;
+                    <http://example.org/vocabulary/correspondingBook> "${bookParam}" ;
+                    <http://purl.org/dc/elements/1.1/creator> ?author.
+                ?text <http://example.org/vocabulary/correspondingSeg> ?line .
 
-            OPTIONAL{?commentary <http://example.org/vocabulary/references> ?text}
-            }
-        `;
-
-        const url = `${endpoint}?query=${encodeURIComponent(query)}&format=json`;
-        console.log('Fetching SPARQL data...');
-        const response = await fetch(url);
-        const data = await response.json() as SPARQLResponse;
-        console.log('SPARQL data received:', data);
-
-        // 2. textsデータを構築
-        const textsData: TextData[] = [];
-        data.results.bindings.forEach((binding: SPARQLResult) => {
-            const existingText = textsData.find((text) => text.line === binding.line.value);
-            if (existingText) {
-                existingText.commentary.push(binding.commentary ? binding.commentary.value : '');
-            } else {
-                textsData.push({
-                    line: binding.line.value,
-                    commentary: binding.commentary ? [binding.commentary.value] : []
-                });
-            }
-        });
-        console.log('Texts data built:', textsData);
-
-        // 3. TEIテキストを表示（awaitで完了を待つ）
-        console.log('Loading TEI text...');
-        await displayTEIText(authorParam, workParam, bookParam, textsData, lineParam);
-        console.log('TEI text loaded');
-
-        // 4. 特定のlineのcommentaryを自動表示（十分な時間を確保）
-        setTimeout(() => {
-            console.log('Displaying commentary for line:', lineParam);
-            displayCommentary(lineParam, textsData);
-        }, 1500); // 時間を延長
-
-        // 5. スクロール処理（さらに時間を確保）
-        setTimeout(() => {
-            console.log('Scrolling to target line:', lineParam);
-            scrollToTargetLine(lineParam);
-        }, 2000); // 時間を延長
-
-    } catch (error) {
-        console.error('Error in handleShowTextWithLine:', error);
-    } finally {
-        setIsLoading(false);
-    }
-};
-
-    const displayTEIText = async (authorParam: string, workParam: string, bookParam: string, textsData: TextData[], targetLine?: string): Promise<void> => {
-    const xml_path = `https://humanitext-dts-data.vercel.app/xml/${authorParam}/${workParam}/${bookParam}.xml`;
-    const CETEIcean = new CETEI();
-
-    const text_behaviors = {
-        "tei": {
-            "seg": (element: HTMLElement) => {
-                const xmlId = element.getAttribute('xml:id');
-                if (xmlId) {
-                    const idSpan = document.createElement("span");
-                    idSpan.textContent = `[${xmlId}] `;
-                    idSpan.style.fontSize = "14px";
-                    idSpan.style.color = "#666";
-                    idSpan.style.marginRight = "4px";
-
-                    // 目標のlineの場合はハイライト
-                    if (targetLine && xmlId === targetLine) {
-                        idSpan.style.backgroundColor = "#ffeb3b";
-                        idSpan.style.fontWeight = "bold";
-                        idSpan.style.padding = "2px 4px";
-                        idSpan.style.borderRadius = "3px";
-                        idSpan.id = `target-line-${xmlId}`;
-                        element.id = `target-element-${xmlId}`;
-                    }
-
-                    // parentNodeチェックと挿入
-                    if (element.parentNode) {
-                        element.parentNode.insertBefore(idSpan, element);
-                    } else {
-                        // 代替手段：elementの最初の子として挿入
-                        element.insertAdjacentElement('afterbegin', idSpan);
-                    }
-
-                    const matchingText = textsData.find((text) => text.line === xmlId);
-                    if (matchingText && matchingText.commentary && matchingText.commentary.length > 0) {
-                        idSpan.style.color = "blue";
-                        idSpan.style.cursor = "pointer";
-                        idSpan.addEventListener("click", () => {
-                            displayCommentary(xmlId, textsData);
-                            const newUrl = `/reader/${encodeURIComponent(authorParam)}/${encodeURIComponent(workParam)}/${encodeURIComponent(bookParam)}/${encodeURIComponent(xmlId)}`;
-                            window.history.pushState({}, '', newUrl);
-                        });
-                    }
+                OPTIONAL{?commentary <http://example.org/vocabulary/references> ?text}
                 }
-                
-                // 重要: seg要素のスタイル設定
-                element.style.display = "block";
-                element.style.marginBottom = "10px";
-                element.style.lineHeight = "1.6";
-                element.style.whiteSpace = "pre-wrap"; // 改行を保持
-                
-                return element;
-            }
+            `;
+
+            const url = `${endpoint}?query=${encodeURIComponent(query)}&format=json`;
+            const response = await fetch(url);
+            const data = await response.json() as SPARQLResponse;
+
+            // 2. textsデータを構築
+            const textsData: TextData[] = [];
+            data.results.bindings.forEach((binding: SPARQLResult) => {
+                const existingText = textsData.find((text) => text.line === binding.line.value);
+                if (existingText) {
+                    existingText.commentary.push(binding.commentary ? binding.commentary.value : '');
+                } else {
+                    textsData.push({
+                        line: binding.line.value,
+                        commentary: binding.commentary ? [binding.commentary.value] : []
+                    });
+                }
+            });
+
+            //setTexts({ value: textsData });
+
+            // 3. TEIテキストを表示
+            await displayTEIText(authorParam, workParam, bookParam, textsData, lineParam);
+
+            // 4. 特定のlineのcommentaryを自動表示
+            setTimeout(() => {
+                displayCommentary(lineParam, textsData);
+            }, 1000);
+
+        } catch (error) {
+            console.error('Error loading text:', error);
+        } finally {
+            setIsLoading(false);
         }
+
     };
 
-    CETEIcean.addBehaviors(text_behaviors);
-    
-    // Promiseでラップして非同期処理を同期的に扱う
-    return new Promise((resolve, reject) => {
+    const displayTEIText = async (authorParam: string, workParam: string, bookParam: string, textsData: TextData[], targetLine?: string) => {
+        const xml_path = `https://humanitext-dts-data.vercel.app/xml/${authorParam}/${workParam}/${bookParam}.xml`;
+        const CETEIcean = new CETEI();
+
+        const text_behaviors = {
+            "tei": {
+                "seg": (element: HTMLElement) => {
+                    const xmlId = element.getAttribute('xml:id');
+                    if (xmlId) {
+                        const idSpan = document.createElement("span");
+                        idSpan.textContent = `[${xmlId}] `;
+                        idSpan.style.fontSize = "14px";
+
+                        // 目標のlineの場合はハイライト
+                        if (targetLine && xmlId === targetLine) {
+                            idSpan.style.backgroundColor = "#ffeb3b"; // 黄色でハイライト
+                            idSpan.style.fontWeight = "bold";
+                            idSpan.style.padding = "2px 4px";
+                            idSpan.style.borderRadius = "3px";
+                            // スクロール用のIDを設定
+                            idSpan.id = `target-line-${xmlId}`;
+                            element.id = `target-element-${xmlId}`;
+                        }
+
+                        // parentNodeのnullチェックを追加
+                        if (element.parentNode) {
+                            element.parentNode.insertBefore(idSpan, element);
+                        } else {
+                            console.warn(`Parent node not found for element with xmlId: ${xmlId}`);
+                            // 代替手段として、elementの前に挿入できない場合の処理
+                            // 例: elementの隣に追加するなど
+                        }
+
+                        const matchingText = textsData.find((text) => text.line === xmlId);
+                        if (matchingText && matchingText.commentary && matchingText.commentary.length > 0) {
+                            idSpan.style.color = "blue";
+                            idSpan.style.cursor = "pointer";
+                            idSpan.addEventListener("click", () => {
+                                displayCommentary(xmlId, textsData);
+                                // URLを更新
+                                const newUrl = `/reader/${encodeURIComponent(authorParam)}/${encodeURIComponent(workParam)}/${encodeURIComponent(bookParam)}/${encodeURIComponent(xmlId)}`;
+                                window.history.pushState({}, '', newUrl);
+                            });
+                        }
+                    }
+                    element.style.display = "block";
+                    element.style.marginBottom = "10px";
+                },
+                "app": function(elt: HTMLElement) {
+                                const lemElement = elt.querySelector("tei-lem");
+                                const rdgElement = elt.querySelector("tei-rdg");
+                                // rdgElementのwit属性の値を取得
+                                const wit = rdgElement ? rdgElement.getAttribute("wit") : null;
+
+                                const container = document.createElement("span");
+                                container.style.position = "relative";
+                                container.style.display = "inline-block";
+
+                                const lemSpan = document.createElement("span");
+                                lemSpan.innerHTML = lemElement ? lemElement.innerHTML : "";
+                                lemSpan.style.backgroundColor = "#f0f0f0"; // 背景色を薄いグレーに設定
+                                lemSpan.style.fontWeight = "bold"; // 太字に設定
+                                //lemSpan.style.textDecoration = "underline";
+                                lemSpan.style.cursor = "pointer";
+                                //lemSpan.style.color = "blue";
+
+                                const popup = document.createElement("div");
+                                //popup.innerHTML = rdgElement ? rdgElement.innerHTML : "";
+                                // innerHTMLに wit属性の値と rdgElementの内容を表示
+                                popup.innerHTML = wit ? `${wit}: ${rdgElement ? rdgElement.innerHTML : ""}` : rdgElement ? rdgElement.innerHTML : "";
+                                popup.style.position = "absolute";
+                                popup.style.bottom = "100%";
+                                popup.style.left = "50%";
+                                popup.style.transform = "translateX(-50%)";
+                                popup.style.backgroundColor = "#333";
+                                popup.style.color = "white";
+                                popup.style.padding = "5px 10px";
+                                popup.style.borderRadius = "4px";
+                                popup.style.fontSize = "12px";
+                                popup.style.whiteSpace = "nowrap";
+                                popup.style.display = "none";
+                                popup.style.zIndex = "1000";
+
+                                // ホバーでポップアップ表示
+                                lemSpan.addEventListener("mouseenter", function() {
+                                    popup.style.display = "block";
+                                });
+
+                                lemSpan.addEventListener("mouseleave", function() {
+                                    popup.style.display = "none";
+                                });
+
+                                container.appendChild(lemSpan);
+                                container.appendChild(popup);
+
+                                return container;
+                                }
+
+
+            }
+        };
+
+        CETEIcean.addBehaviors(text_behaviors);
         CETEIcean.getHTML5(xml_path, function (data: Document) {
-            try {
-                const body = data.getElementById(bookParam);
-                const teiElem = document.getElementById("TEI");
-                
-                if (teiElem && body) {
-                    teiElem.innerHTML = '';
-                    teiElem.appendChild(body);
-                    
-                    // CSSスタイルを明示的に適用
-                    teiElem.style.fontFamily = "Georgia, 'Times New Roman', Times, serif";
-                    teiElem.style.fontSize = "16px";
-                    teiElem.style.lineHeight = "1.6";
-                    teiElem.style.whiteSpace = "pre-wrap";
-                    
-                    console.log('TEI content loaded successfully');
-                    resolve();
-                } else {
-                    console.error('TEI element or body not found', { teiElem, body });
-                    reject(new Error('TEI element or body not found'));
+            const body = data.getElementById(bookParam);
+            const teiElem = document.getElementById("TEI");
+            if (teiElem && body) {
+                teiElem.innerHTML = '';  // 既存の内容をクリア
+                teiElem.appendChild(body);
+
+                // 目標のlineがある場合、スクロールして中央に表示
+                if (targetLine) {
+                    setTimeout(() => {
+                        scrollToTargetLine(targetLine);
+                    }, 500); // DOM構築を待つ
                 }
-            } catch (error) {
-                console.error('Error in CETEIcean callback:', error);
-                reject(error);
             }
         });
-    });
-};
+    };
 
     // 目標のlineまでスクロールする関数
     const scrollToTargetLine = (targetLine: string) => {
-    console.log('Attempting to scroll to target line:', targetLine);
-    
-    const targetElement = document.getElementById(`target-line-${targetLine}`) ||
-        document.getElementById(`target-element-${targetLine}`);
+        const targetElement = document.getElementById(`target-line-${targetLine}`) ||
+            document.getElementById(`target-element-${targetLine}`);
 
-    if (targetElement) {
-        console.log('Target element found, scrolling...');
-        const teiContainer = document.getElementById("TEI");
-        
-        if (teiContainer) {
-            // より確実なスクロール方法
-            targetElement.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center',
-                inline: 'nearest'
-            });
+        if (targetElement) {
+            const teiContainer = document.getElementById("TEI");
+            if (teiContainer) {
+                // より確実なスクロール方法を使用
+                targetElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                    inline: 'nearest'
+                });
 
-            // アニメーション効果
-            targetElement.style.transition = 'all 0.5s ease';
-            targetElement.style.boxShadow = '0 0 20px rgba(255, 235, 59, 0.8)';
+                // 代替方法：scrollIntoViewが効かない場合
+                setTimeout(() => {
+                    const elementRect = targetElement.getBoundingClientRect();
+                    const containerRect = teiContainer.getBoundingClientRect();
+
+                    if (elementRect.top < containerRect.top || elementRect.bottom > containerRect.bottom) {
+                        const scrollTop = teiContainer.scrollTop +
+                            elementRect.top - containerRect.top -
+                            (containerRect.height / 2) +
+                            (elementRect.height / 2);
+
+                        teiContainer.scrollTo({
+                            top: scrollTop,
+                            behavior: 'smooth'
+                        });
+                    }
+                }, 100);
+
+                // アニメーション効果
+                targetElement.style.transition = 'all 0.3s ease';
+                targetElement.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    targetElement.style.transform = 'scale(1)';
+                }, 1000);
+            }
+        } else {
+            console.warn(`Target element not found: ${targetLine}`);
+            // 要素が見つからない場合の代替処理
             setTimeout(() => {
-                targetElement.style.boxShadow = 'none';
-            }, 2000);
+                scrollToTargetLine(targetLine);
+            }, 500);
         }
-    }
-};
+    };
 
     const displayCommentary = (xmlId: string, textsData: TextData[]) => {
         const matchingText = textsData.find((text) => text.line === xmlId);
