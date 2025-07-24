@@ -317,7 +317,7 @@ export default function ChatPage() {
                     const text_behaviors = {
                         "tei": {
                             //"seg": (element) => {
-                            "ana": (element: HTMLElement) => {
+                            "ab": (element: HTMLElement) => {
                                 // <seg> 要素の xml:id を取得
                                 const xmlId = element.getAttribute('xml:id');
                                 const matchingText = texts.value.find((text) => text.line === xmlId);
