@@ -30,12 +30,6 @@ interface CommentaryQueryBinding {
     book: SPARQLBinding;       // 追加
 }
 
-interface CommentaryQueryResponse {
-    results: {
-        bindings: CommentaryQueryBinding[];
-    };
-}
-
 interface CETEIDocument extends Document {
     getElementById(elementId: string): HTMLElement | null;
 }
