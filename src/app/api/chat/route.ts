@@ -139,7 +139,9 @@ export async function POST(req: NextRequest) {
 
     // 質問を整形
     const reformulated = await chatModel.invoke(reformulateMessages);
-    const formattedQuestion = reformulated.content ?? question;
+    const formattedQuestion = typeof reformulated.content === 'string' 
+      ? reformulated.content 
+      : reformulated.content?.toString() ?? question;
     console.log("Formatted question:", formattedQuestion);
   
   
