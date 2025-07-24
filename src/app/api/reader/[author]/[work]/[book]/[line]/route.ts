@@ -1,5 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// 型定義を追加
+interface SPARQLBinding {
+    type: string;
+    value: string;
+}
+
+interface SPARQLResult {
+    text?: SPARQLBinding;
+    line: SPARQLBinding;
+    commentary?: SPARQLBinding;
+}
+
+interface SPARQLResponse {
+    results: {
+        bindings: SPARQLResult[];
+    };
+}
+
+interface CommentaryBinding {
+    seg: SPARQLBinding;
+    annotator: SPARQLBinding;
+    work: SPARQLBinding;
+    book: SPARQLBinding;
+}
+
+interface CommentaryResponse {
+    results: {
+        bindings: CommentaryBinding[];
+    };
+}
+
+interface TextData {
+    line: string;
+    commentary: string[];
+}
+
+interface CommentaryDetail {
+    id: string;
+    annotator: string;
+    work: string;
+    book: string;
+    segment: string;
+    text: string;
+    dts_url: string;
+    error?: string;
+}
+
 export async function GET(
     request: NextRequest,
     { params }: { params: { author: string; work: string; book: string; line: string } }
@@ -37,11 +84,12 @@ export async function GET(
 
         const url = `${endpoint}?query=${encodeURIComponent(query)}&format=json`;
         const response = await fetch(url);
-        const data = await response.json();
+        const data = await response.json() as SPARQLResponse;
 
         // 2. textsデータを構築
-        const textsData: { line: string; commentary: string[] }[] = [];
-        data.results.bindings.forEach((binding: any) => {
+        //const textsData: { line: string; commentary: string[] }[] = [];
+        const textsData: TextData[] = [];
+        data.results.bindings.forEach((binding: SPARQLResult) => {
             const existingText = textsData.find((text) => text.line === binding.line.value);
             if (existingText) {
                 if (binding.commentary) {
@@ -73,7 +121,7 @@ export async function GET(
         }
 
         // 4. 各コメンタリーの詳細データを取得
-        const commentaryDetails = [];
+        const commentaryDetails: CommentaryDetail[] = [];
         
         for (const commentary of targetLineData.commentary) {
             if (!commentary) continue;
@@ -94,7 +142,7 @@ export async function GET(
 
             const commentaryUrl = `${endpoint}?query=${encodeURIComponent(commentaryQuery)}&format=json`;
             const commentaryResponse = await fetch(commentaryUrl);
-            const commentaryData = await commentaryResponse.json();
+            const commentaryData = await commentaryResponse.json() as CommentaryResponse;
 
             for (const binding of commentaryData.results.bindings) {
                 const dts_api = `https://humanitext-dts.vercel.app/api/dts/document?id=urn:${binding.annotator.value}.${binding.work.value}:${binding.book.value}&ref=${binding.seg.value}`;

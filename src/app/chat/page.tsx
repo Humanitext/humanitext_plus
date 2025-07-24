@@ -96,7 +96,7 @@ useEffect(() => {
 
 // 選択肢の変更ハンドラー
 const handleAuthorChange = (selectedOptions: MultiValue<AuthorOption>) => {
-  const newAuthors = selectedOptions ? selectedOptions.map((opt: any) => opt.value) : [];
+  const newAuthors = selectedOptions ? selectedOptions.map((opt: AuthorOption) => opt.value) : [];
   setAuthor(newAuthors);
 };
 
