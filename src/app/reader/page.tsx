@@ -7,7 +7,6 @@ import { GoogleGenAI } from "@google/genai";
 import CETEI from "CETEIcean";
 
 type DocInfo = { author: string; fileName: string; content: string };
-type Message = { role: "user" | "assistant"; text: string; contextDocs?: DocInfo[] };
 
 /*
 // Define the option type
@@ -43,11 +42,11 @@ export default function ChatPage() {
     //const [expandedDocs, setExpandedDocs] = useState<{ [key: string]: boolean }>({});
     //const [expandedContexts, setExpandedContexts] = useState<{ [key: number]: boolean }>({}); // 追加
 
-    const [isMounted, setIsMounted] = useState(false);
+    //const [isMounted, setIsMounted] = useState(false);
 
-    const [commentaryList, setCommentaryList] = useState<{ annotator: string; book: string; work: string; content: string }[]>([]);
+    //const [commentaryList, setCommentaryList] = useState<{ annotator: string; book: string; work: string; content: string }[]>([]);
 
-    const teiContent = useState<string>('');
+    //const teiContent = useState<string>('');
 
     const [lang, setLang] = useState<string>('Japanese'); // 言語選択の状態を追加
 
@@ -67,10 +66,12 @@ export default function ChatPage() {
     const [processedText, setProcessedText] = useState<string>('');
     const [isTransSummDialogOpen, setIsTransSummDialogOpen] = useState<boolean>(false);
 
+    /*
     // Initialize component mounting
     useEffect(() => {
         setIsMounted(true);
     }, []);
+    */
 
     //const [selectedOption, setSelectedOption] = useState(null);
 
@@ -412,7 +413,7 @@ export default function ChatPage() {
                         }
                     });
 
-                    const textClicked = (xmlId) => {
+                    const textClicked = (xmlId: string) => {
                         // URL更新（ブラウザ履歴に追加）
                         const newUrl = `/reader/${encodeURIComponent(author)}/${encodeURIComponent(work)}/${encodeURIComponent(book)}/${encodeURIComponent(xmlId)}`;
                         window.history.pushState({}, '', newUrl);
@@ -420,10 +421,29 @@ export default function ChatPage() {
                         console.log(xmlId);
                         const matchingText = texts.value.find((text) => text.line === xmlId);
 
-                        setCommentaryList([]); // commentary_listを初期化
+                        //setCommentaryList([]); // commentary_listを初期化
 
                         // containerという要素を取得（1回だけ）
                         const container = document.getElementById("commentary_container");
+
+                        // containerのnullチェックを追加
+                        if (!container) {
+                            console.error("Commentary container not found");
+                            return;
+                        }
+
+                        // matchingTextのundefinedチェックを追加
+                        if (!matchingText) {
+                            console.warn(`No matching text found for xmlId: ${xmlId}`);
+                            // メッセージを表示
+                            const noDataMsg = document.createElement("div");
+                            noDataMsg.textContent = "No data available for this segment.";
+                            noDataMsg.style.padding = "20px";
+                            noDataMsg.style.textAlign = "center";
+                            noDataMsg.style.color = "#666";
+                            container.appendChild(noDataMsg);
+                            return;
+                        }
 
                         // container内のすべての子要素を削除
                         while (container.firstChild) {
@@ -635,6 +655,7 @@ export default function ChatPage() {
                                                     container.appendChild(card);
                                                     console.log(`Card ${commentaryIndex + 1}-${bindingIndex + 1} added to DOM`);
 
+                                                    /*
                                                     // setCommentaryListを正しいタイミングで実行
                                                     setCommentaryList(prev => [...prev, {
                                                         annotator: binding.annotator.value,
@@ -642,6 +663,7 @@ export default function ChatPage() {
                                                         work: binding.work.value,
                                                         content: stringBody
                                                     }]);
+                                                    */
 
                                                 } catch (error) {
                                                     console.error(`Error processing card ${commentaryIndex + 1}-${bindingIndex + 1}:`, error);
