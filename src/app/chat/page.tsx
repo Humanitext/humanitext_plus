@@ -2,7 +2,13 @@
 import { useState, useEffect, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import { useRouter } from "next/navigation";
-import Select from "react-select";
+import Select, { MultiValue } from "react-select";
+
+// 型定義を追加
+interface AuthorOption {
+  value: string;
+  label: string;
+}
 
 type DocInfo = { author: string; fileName: string; content: string };
 type Message = { role: "user" | "assistant"; text: string; contextDocs?: DocInfo[] };
@@ -14,7 +20,8 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   // メタデータフィルター例（必要に応じて拡張）
-  const [filter, setFilter] = useState("");
+  //const [filter, setFilter] = useState("");
+  const filter = useState("");
   const [mode, setMode] = useState("qa");
   const [genre, setGenre] = useState<string[]>([]); // 配列で管理
   const [model, setModel] = useState<string[]>(['gpt-4.1']); // 配列で管理
@@ -30,7 +37,7 @@ export default function ChatPage() {
     setIsMounted(true);
   }, []);
 
-  const [selectedOption, setSelectedOption] = useState(null);
+  //const [selectedOption, setSelectedOption] = useState(null);
 
   const genre_author = {
     PhilGreek: ["Plato", "Aristotle"],
@@ -38,12 +45,6 @@ export default function ChatPage() {
     LitGreek: ["Homer"],
     // 必要に応じて他のジャンルと著者を追加
   };
-
-  const options = [
-  { value: 'chocolate', label: 'Chocolate' },
-  { value: 'strawberry', label: 'Strawberry' },
-  { value: 'vanilla', label: 'Vanilla' },
-];
 
   // ジャンルに基づく著者リストの生成を修正
 const availableAuthors = useMemo(() => {
@@ -91,18 +92,20 @@ useEffect(() => {
 }, [genre, availableAuthors, isMounted]);
 
 // 全選択状態の管理
-const allSelected = author.length === availableAuthors.length;
+//const allSelected = author.length === availableAuthors.length;
 
 // 選択肢の変更ハンドラー
-const handleAuthorChange = (selectedOptions: any) => {
+const handleAuthorChange = (selectedOptions: MultiValue<AuthorOption>) => {
   const newAuthors = selectedOptions ? selectedOptions.map((opt: any) => opt.value) : [];
   setAuthor(newAuthors);
 };
 
+/*
 // 全選択/解除ハンドラー
 const handleSelectAll = (checked: boolean) => {
   setAuthor(checked ? availableAuthors : []);
 };
+*/
 
   // mode変更時にAPIへ送信
   useEffect(() => {
