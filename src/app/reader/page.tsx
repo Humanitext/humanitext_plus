@@ -932,12 +932,6 @@ export default function ChatPage() {
 
                     <div id="commentary_container" 
                         className="flex-1 flex flex-col overflow-y-auto mb-4 rounded"
-                        style={{
-                            width: '100%',
-                            maxWidth: '100%',
-                            overflowX: 'hidden',
-                            wordWrap: 'break-word'
-                        }}
                     />
 
 
