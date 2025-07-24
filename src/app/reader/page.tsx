@@ -16,6 +16,30 @@ type GenreOption = {
 };
 */
 
+interface SPARQLBinding {
+    value: string;
+}
+
+interface CommentaryQueryBinding {
+    text: SPARQLBinding;
+    line: SPARQLBinding;
+    commentary?: SPARQLBinding;
+    seg: SPARQLBinding;        // 追加
+    annotator: SPARQLBinding;  // 追加
+    work: SPARQLBinding;       // 追加
+    book: SPARQLBinding;       // 追加
+}
+
+interface CommentaryQueryResponse {
+    results: {
+        bindings: CommentaryQueryBinding[];
+    };
+}
+
+interface CETEIDocument extends Document {
+    getElementById(elementId: string): HTMLElement | null;
+}
+
 const genAI = new GoogleGenAI({
     //apiKey: process.env.GOOGLE_GENAI_API_KEY
     apiKey: process.env.NEXT_PUBLIC_GENAI_API_KEY
@@ -33,7 +57,8 @@ export default function ChatPage() {
     // メタデータフィルター例（必要に応じて拡張）
     //const [filter, setFilter] = useState("");
     //const [mode, setMode] = useState("qa");
-    const [genre, setGenre] = useState<string>('');
+    //const [genre, setGenre] = useState<string>('');
+    const [genre, setGenre] = useState<string[]>([]);
     //const [model, setModel] = useState<string[]>(['gpt-4.1']); // 配列で管理
     const [author, setAuthor] = useState<string>('');
     const [work, setWork] = useState<string>('');
@@ -76,7 +101,7 @@ export default function ChatPage() {
 
     //const [selectedOption, setSelectedOption] = useState(null);
 
-    const genre_author = {
+    const genre_author: Record<string, string[]> = {
         western_classics: ["Homer", "Plato", "Aristotle", "Cicero"],
         PhilGreek: ["Plato", "Aristotle"],
         PhilRoma: ["Cicero"],
@@ -84,7 +109,7 @@ export default function ChatPage() {
         // 必要に応じて他のジャンルと著者を追加
     };
 
-    const author_work = {
+    const author_work: { [key: string]: string[] } = {
         Aristotle: ["Metaphysics", "Rhetoric", "Topica"],
         Plato: ["Republic", "Phaedrus", "Symposium"],
         Cicero: ["De Oratore", "De Re Publica"],
@@ -94,11 +119,17 @@ export default function ChatPage() {
 
     // ジャンルに基づく著者リストの生成を修正
     const availableAuthors = useMemo(() => {
-        if (genre === 'All' || !genre) {
-            return Array.from(new Set(Object.values(genre_author).flat()));
-        }
-        return genre_author[genre] || [];
-    }, [genre]);
+    // "All"が含まれている場合の処理を修正
+    if (genre.includes('All') || genre.length === 0) {
+        return Array.from(new Set(Object.values(genre_author).flat()));
+    }
+    // 複数のジャンルが選択された場合
+    return Array.from(
+        new Set(
+            genre.flatMap((g) => genre_author[g] || [])
+        )
+    );
+}, [genre]);
 
     // 著者に基づく著作リストの生成
     let availableWorks = useMemo(() => {
@@ -256,7 +287,7 @@ export default function ChatPage() {
                 .then(res => res.json())
                 .then(data => {
                     console.log(data);
-                    data.results.bindings.forEach((binding) => {
+                    data.results.bindings.forEach((binding: CommentaryQueryBinding) => {
 
                         //dts apiを使用して、texts.value.descriptionにテクストを追加
                         //const url = `https://humanitext-dts.vercel.app/api/dts/document?id=urn:${author}.${work}:${book}&ref=${binding.line.value}`;
@@ -267,7 +298,7 @@ export default function ChatPage() {
                         const existingText = texts.value.find((text) => text.line === binding.line.value);
                         console.log(existingText);
                         if (existingText) {
-                            existingText.commentary.push(binding.commentary ? binding.commentary.value : null);
+                            existingText.commentary.push(binding.commentary ? binding.commentary.value : "");
                             //変更を反映してtexts.valueを更新
                             texts.value = [...texts.value];
                         } else {
@@ -403,7 +434,7 @@ export default function ChatPage() {
                     };
 
                     CETEIcean.addBehaviors(text_behaviors);
-                    CETEIcean.getHTML5(xml_path, function (data) {
+                    CETEIcean.getHTML5(xml_path, function (data: CETEIDocument) {
                         //console.log(data);
                         // xml:idがroute.params.bookの要素を取得
                         const body = data.getElementById(book);
@@ -483,11 +514,11 @@ export default function ChatPage() {
                                     .then(data => {
                                         console.log(`Commentary ${commentaryIndex + 1} data:`, data);
 
-                                        data.results.bindings.forEach((binding, bindingIndex) => {
+                                        data.results.bindings.forEach((binding: CommentaryQueryBinding, bindingIndex: number) => {
                                             const dts_api = `https://humanitext-dts.vercel.app/api/dts/document?id=urn:${binding.annotator.value}.${binding.work.value}:${binding.book.value}&ref=${binding.seg.value}`;
                                             console.log(`Processing: ${dts_api}`);
 
-                                            c.getHTML5(dts_api, function (data) {
+                                            c.getHTML5(dts_api, function (data: CETEIDocument) {
                                                 try {
                                                     const body = data.getElementById(binding.seg.value);
                                                     if (!body) {
@@ -680,7 +711,7 @@ export default function ChatPage() {
                     };
                     // Google GenAIによる処理
                     // LLMProcess関数内の修正
-                    const LLMProcess = async (text, mode, selectedLang) => {
+                    const LLMProcess = async (text: string, mode: string, selectedLang: string) => {
                         try {
                             let prompt = '';
                             if (mode === "translate") {
@@ -783,13 +814,13 @@ export default function ChatPage() {
                                     setGenre(selected);
                                 }}
                                 className="border rounded px-2 py-1 mt-1 w-full"
-                                size={5} // 表示行数はお好みで
+                                size={5}
+                                multiple // 複数選択を有効化
                             >
                                 <option value="western_classics">Western Classics</option>
                                 <option value="PhilGreek">Greek Philosophy</option>
                                 <option value="PhilRoma">Roman Philosophy</option>
                                 <option value="LitGreek">Greek Literature</option>
-                                {/* 必要に応じて著者を追加 */}
                             </select>
                         </label>
                         <label className="block mt-6 mb-2 text-sm font-medium">

@@ -39,12 +39,13 @@ export default function ChatPage() {
 
   //const [selectedOption, setSelectedOption] = useState(null);
 
-  const genre_author = {
-    PhilGreek: ["Plato", "Aristotle"],
-    PhilRoma: ["Cicero"],
-    LitGreek: ["Homer"],
-    // 必要に応じて他のジャンルと著者を追加
-  };
+  // genre_author の型定義を修正
+  const genre_author: { [key: string]: string[] } = {
+  PhilGreek: ["Plato", "Aristotle"],
+  PhilRoma: ["Cicero"],
+  LitGreek: ["Homer"],
+  // 必要に応じて他のジャンルと著者を追加
+};
 
   // ジャンルに基づく著者リストの生成を修正
 const availableAuthors = useMemo(() => {
