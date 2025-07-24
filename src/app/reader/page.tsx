@@ -528,9 +528,6 @@ export default function ChatPage() {
                                                     card.style.marginBottom = "20px";
                                                     card.style.border = "1px solid #ccc";
                                                     card.style.borderRadius = "8px";
-                                                    card.style.wordWrap = "break-word";
-                                                    card.style.overflow = "hidden";
-                                                    card.style.maxWidth = "100%";
                                                     card.setAttribute('data-commentary-index', `${commentaryIndex}-${bindingIndex}`);
 
                                                     // card header（タイトルのみ）を作成
@@ -539,8 +536,6 @@ export default function ChatPage() {
                                                     cardHeader.style.backgroundColor = "#f8f9fa";
                                                     cardHeader.style.borderBottom = "1px solid #e9ecef";
                                                     cardHeader.style.borderRadius = "8px 8px 0 0";
-                                                    cardHeader.style.wordWrap = "break-word";
-                                                    cardHeader.style.overflow = "hidden";
 
                                                     // card titleを作成
                                                     const cardTitle = document.createElement("h3");
@@ -549,11 +544,6 @@ export default function ChatPage() {
                                                     cardTitle.style.fontSize = "18px";
                                                     cardTitle.style.margin = "0";
                                                     cardTitle.style.fontWeight = "600";
-                                                    cardTitle.style.wordWrap = "break-word";
-                                                    cardTitle.style.overflowWrap = "break-word";
-                                                    cardTitle.style.whiteSpace = "normal";
-                                                    cardTitle.style.lineHeight = "1.4";
-                                                    cardTitle.style.maxWidth = "100%";
 
                                                     // 表示/非表示切り替えボタンを作成
                                                     const toggleButton = document.createElement("button");
@@ -567,13 +557,10 @@ export default function ChatPage() {
                                                     toggleButton.style.fontSize = "12px";
                                                     toggleButton.style.fontWeight = "500";
                                                     toggleButton.style.marginTop = "10px";
-                                                    toggleButton.style.minWidth = "60px";
-                                                    toggleButton.style.flexShrink = "0";
 
                                                     // card content（本文とボタン）を作成
                                                     const cardContent = document.createElement("div");
                                                     cardContent.style.display = "none";
-                                                    cardContent.style.wordWrap = "break-word";
 
                                                     // card bodyを作成
                                                     const cardBody = document.createElement("div");
@@ -586,8 +573,6 @@ export default function ChatPage() {
                                                     cardBody.style.padding = "20px";
                                                     cardBody.style.lineHeight = "1.6";
                                                     cardBody.style.backgroundColor = "#ffffff";
-                                                    cardBody.style.wordWrap = "break-word";
-                                                    cardBody.style.overflowWrap = "break-word";
 
                                                     // card footerを作成
                                                     const cardFooter = document.createElement("div");
@@ -596,10 +581,8 @@ export default function ChatPage() {
                                                     cardFooter.style.borderTop = "1px solid #e9ecef";
                                                     cardFooter.style.borderRadius = "0 0 8px 8px";
                                                     cardFooter.style.display = "flex";
-                                                    cardFooter.style.flexWrap = "wrap";
                                                     cardFooter.style.alignItems = "center";
-                                                    cardFooter.style.gap = "10px";
-                                                    cardFooter.style.justifyContent = "flex-start";
+                                                    cardFooter.style.gap = "15px";
 
                                                     // 言語選択肢を作成
                                                     const langSelect = document.createElement("select");
@@ -616,8 +599,6 @@ export default function ChatPage() {
                                                     langSelect.style.borderRadius = "4px";
                                                     langSelect.style.backgroundColor = "white";
                                                     langSelect.style.cursor = "pointer";
-                                                    langSelect.style.minWidth = "120px";
-                                                    langSelect.style.flexShrink = "0";
 
                                                     // 翻訳ボタンを作成
                                                     const translateButton = document.createElement("button");
@@ -630,9 +611,6 @@ export default function ChatPage() {
                                                     translateButton.style.borderRadius = "4px";
                                                     translateButton.style.cursor = "pointer";
                                                     translateButton.style.fontWeight = "500";
-                                                    translateButton.style.minWidth = "100px";
-                                                    translateButton.style.flexShrink = "0";
-                                                    translateButton.style.whiteSpace = "nowrap";
                                                     translateButton.addEventListener("click", () => {
                                                         const currentLang = langSelect.value;
                                                         commentaryTranslate(stringBody, currentLang);
@@ -649,9 +627,6 @@ export default function ChatPage() {
                                                     summarizeButton.style.borderRadius = "4px";
                                                     summarizeButton.style.cursor = "pointer";
                                                     summarizeButton.style.fontWeight = "500";
-                                                    summarizeButton.style.minWidth = "90px";
-                                                    summarizeButton.style.flexShrink = "0";
-                                                    summarizeButton.style.whiteSpace = "nowrap";
                                                     summarizeButton.addEventListener("click", () => {
                                                         const currentLang = langSelect.value;
                                                         commentarySummarize(stringBody, currentLang);
@@ -668,9 +643,6 @@ export default function ChatPage() {
                                                     copyUrlButton.style.borderRadius = "4px";
                                                     copyUrlButton.style.cursor = "pointer";
                                                     copyUrlButton.style.fontWeight = "500";
-                                                    copyUrlButton.style.minWidth = "90px";
-                                                    copyUrlButton.style.flexShrink = "0";
-                                                    copyUrlButton.style.whiteSpace = "nowrap";
                                                     copyUrlButton.addEventListener("click", () => {
                                                         copyCommentaryUrl(xmlId);
                                                     });
@@ -930,9 +902,7 @@ export default function ChatPage() {
 
                     {/* 右列：コンテンツエリア */}
 
-                    <div id="commentary_container" 
-                        className="flex-1 flex flex-col overflow-y-auto mb-4 rounded"
-                    />
+                    <div id="commentary_container" className="flex-1 flex flex-col overflow-y-auto mb-4 rounded" />
 
 
                 </section>
