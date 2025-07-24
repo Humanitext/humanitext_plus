@@ -587,6 +587,10 @@ export default function ChatPage() {
                                                     cardFooter.style.display = "flex";
                                                     cardFooter.style.alignItems = "center";
                                                     cardFooter.style.gap = "15px";
+                                                    cardFooter.style.overflowWrap = "break-word";
+                                                    cardFooter.style.whiteSpace = "normal";
+                                                    cardFooter.style.lineHeight = "1.4";
+                                                    cardFooter.style.maxWidth = "100%";
 
                                                     // 言語選択肢を作成
                                                     const langSelect = document.createElement("select");
