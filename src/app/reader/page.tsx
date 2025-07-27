@@ -16,6 +16,13 @@ type GenreOption = {
 };
 */
 
+// windowオブジェクトの型定義を追加
+declare global {
+    interface Window {
+        currentTextClicked?: (xmlId: string) => void;
+    }
+}
+
 interface SPARQLBinding {
     value: string;
 }
@@ -370,8 +377,8 @@ export default function ChatPage() {
                                                 idSpan.style.color = "blue";
                                                 idSpan.style.cursor = "pointer";
                                                 idSpan.addEventListener("click", () => {
-                                                    if ((window as any).currentTextClicked) {
-                                                        (window as any).currentTextClicked(xmlId);
+                                                    if (window.currentTextClicked) {
+                                                        window.currentTextClicked(xmlId);
                                                     }
                                                 });
                                             }
@@ -777,7 +784,7 @@ export default function ChatPage() {
 
     // windowオブジェクトに最新のtextClicked関数を登録
     useEffect(() => {
-        (window as any).currentTextClicked = textClicked;
+        window.currentTextClicked = textClicked;
     }, [textClicked]);
 
     // Google GenAIによる処理
