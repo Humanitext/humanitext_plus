@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 //import ReactMarkdown from "react-markdown";
 import { useRouter } from "next/navigation";
 //import Select, { ActionMeta, MultiValue } from 'react-select';  // 型定義を追加
@@ -43,8 +43,9 @@ export default function ChatPage() {
 
     const router = useRouter();
 
-    //const [texts, setTexts] = useState<{ value: { line: string; commentary: string[] }[] }>({ value: [] });
-    const texts = { value: [] as { line: string; commentary: string[] }[] };
+    //const texts = { value: [] as { line: string; commentary: string[] }[] };
+    const [texts, setTexts] = useState<{ line: string; commentary: string[] }[]>([]);
+    const textsRef = useRef<{ line: string; commentary: string[] }[]>([]);
 
     //const [input, setInput] = useState("");
     //const [messages, setMessages] = useState<Message[]>([]);
@@ -113,17 +114,17 @@ export default function ChatPage() {
 
     // ジャンルに基づく著者リストの生成を修正
     const availableAuthors = useMemo(() => {
-    // "All"が含まれている場合の処理を修正
-    if (genre.includes('All') || genre.length === 0) {
-        return Array.from(new Set(Object.values(genre_author).flat()));
-    }
-    // 複数のジャンルが選択された場合
-    return Array.from(
-        new Set(
-            genre.flatMap((g) => genre_author[g] || [])
-        )
-    );
-}, [genre]);
+        // "All"が含まれている場合の処理を修正
+        if (genre.includes('All') || genre.length === 0) {
+            return Array.from(new Set(Object.values(genre_author).flat()));
+        }
+        // 複数のジャンルが選択された場合
+        return Array.from(
+            new Set(
+                genre.flatMap((g) => genre_author[g] || [])
+            )
+        );
+    }, [genre]);
 
     // 著者に基づく著作リストの生成
     let availableWorks = useMemo(() => {
@@ -135,6 +136,11 @@ export default function ChatPage() {
 
     // 著者に基づく著作リストの生成
     const [availableBooks, setAvailableBooks] = useState<string[]>([]);
+
+    // useEffectでtextsRefを同期
+    useEffect(() => {
+        textsRef.current = texts;
+    }, [texts]);
 
     useEffect(() => {
         if (availableBooks.length > 0) {
@@ -253,6 +259,22 @@ export default function ChatPage() {
     // 「テクストを表示」ボタンのクリック処理を関数として定義
     const handleShowText = () => {
         if (author && work && book) {
+            console.log(author, work, book)
+            // 1. TEI要素をクリア
+            const teiElem = document.getElementById("TEI");
+            if (teiElem) {
+                teiElem.innerHTML = '';
+            }
+
+            // 2. コメンタリーコンテナをクリア
+            const commentaryContainer = document.getElementById("commentary_container");
+            if (commentaryContainer) {
+                commentaryContainer.innerHTML = '';
+            }
+
+            // 3. texts配列をクリア（重要）
+            setTexts([]);
+
             // router.push(`/reader/${author}/${work}`);
             //console.log(`Displaying text for ${author} - ${work} - ${book}`);
 
@@ -281,7 +303,13 @@ export default function ChatPage() {
                 .then(res => res.json())
                 .then(data => {
                     console.log(data);
+
+                    const newTextsData: { line: string; commentary: string[] }[] = [];
+
                     data.results.bindings.forEach((binding: CommentaryQueryBinding) => {
+
+                        // 4. 新しいtextsデータを構築
+                        //const newTextsData: { line: string; commentary: string[] }[] = [];
 
                         //dts apiを使用して、texts.value.descriptionにテクストを追加
                         //const url = `https://humanitext-dts.vercel.app/api/dts/document?id=urn:${author}.${work}:${book}&ref=${binding.line.value}`;
@@ -289,24 +317,26 @@ export default function ChatPage() {
                         // urlで問い合わせてデータを取得
 
                         //もし既存のtexts.valueに含まれる連想配列にlineが存在すれば、その連想配列にcommentaryを追加
-                        const existingText = texts.value.find((text) => text.line === binding.line.value);
+                        const existingText = newTextsData.find((text) => text.line === binding.line.value);
                         console.log(existingText);
                         if (existingText) {
                             existingText.commentary.push(binding.commentary ? binding.commentary.value : "");
+                            console.log(existingText.commentary)
                             //変更を反映してtexts.valueを更新
-                            texts.value = [...texts.value];
+                            //texts.value = [...texts.value];
                         } else {
                             //console.log("no existing text");
-                            texts.value.push({
+                            newTextsData.push({
                                 line: binding.line.value,
-                                //description: binding.description.value,
-                                //もしcommentaryが存在すれば新たに連想配列を作成し、texts.valueに追加
                                 commentary: binding.commentary ? [binding.commentary.value] : []
                             });
                         };
                     });
 
-                    console.log(texts.value);
+                    // 5. texts.valueを更新
+                    setTexts(newTextsData);
+                    console.log('Updated texts with', newTextsData.length, 'entries');
+                    //console.log(texts);
 
 
                     const xml_path = `https://humanitext-dts-data.vercel.app/xml/${author}/${work}/${book}.xml`;
@@ -320,8 +350,8 @@ export default function ChatPage() {
                             "ab": (element: HTMLElement) => {
                                 // <seg> 要素の xml:id を取得
                                 const xmlId = element.getAttribute('xml:id');
-                                const matchingText = texts.value.find((text) => text.line === xmlId);
-                                console.log(matchingText);
+                                const matchingText = textsRef.current.find((text) => text.line === xmlId);
+                                //console.log(matchingText);
 
                                 if (xmlId) {
                                     // xml:id の値を表示するための <span> 要素を作成
@@ -340,7 +370,9 @@ export default function ChatPage() {
                                                 idSpan.style.color = "blue";
                                                 idSpan.style.cursor = "pointer";
                                                 idSpan.addEventListener("click", () => {
-                                                    textClicked(xmlId);
+                                                    if ((window as any).currentTextClicked) {
+                                                        (window as any).currentTextClicked(xmlId);
+                                                    }
                                                 });
                                             }
                                         } catch (error) {
@@ -435,361 +467,372 @@ export default function ChatPage() {
                         console.log(body);
                         const teiElem = document.getElementById("TEI");
                         if (teiElem && body) {
+                            // 再度クリアしてから追加（安全のため）
+                            teiElem.innerHTML = '';
                             teiElem.appendChild(body);
+                            console.log('TEI content updated successfully');
+                        } else {
+                            console.error('TEI element or body not found', { teiElem, body });
                         }
                     });
 
-                    const textClicked = (xmlId: string) => {
-                        // URL更新（ブラウザ履歴に追加）
-                        const newUrl = `/reader/${encodeURIComponent(author)}/${encodeURIComponent(work)}/${encodeURIComponent(book)}/${encodeURIComponent(xmlId)}`;
-                        window.history.pushState({}, '', newUrl);
-
-                        console.log(xmlId);
-                        const matchingText = texts.value.find((text) => text.line === xmlId);
-
-                        //setCommentaryList([]); // commentary_listを初期化
-
-                        // containerという要素を取得（1回だけ）
-                        const container = document.getElementById("commentary_container");
-
-                        // containerのnullチェックを追加
-                        if (!container) {
-                            console.error("Commentary container not found");
-                            return;
-                        }
-
-                        // matchingTextのundefinedチェックを追加
-                        if (!matchingText) {
-                            console.warn(`No matching text found for xmlId: ${xmlId}`);
-                            // メッセージを表示
-                            const noDataMsg = document.createElement("div");
-                            noDataMsg.textContent = "No data available for this segment.";
-                            noDataMsg.style.padding = "20px";
-                            noDataMsg.style.textAlign = "center";
-                            noDataMsg.style.color = "#666";
-                            container.appendChild(noDataMsg);
-                            return;
-                        }
-
-                        // container内のすべての子要素を削除
-                        while (container.firstChild) {
-                            container.removeChild(container.firstChild);
-                        }
-
-                        if (matchingText.commentary && matchingText.commentary.length > 0) {
-                            console.log(`Found ${matchingText.commentary.length} commentaries`);
-
-                            const endpoint = "https://dydra.com/junjun7613/humanitextonto/sparql";
-
-                            // 各コメンタリーを順次処理
-                            matchingText.commentary.forEach((commentary, commentaryIndex) => {
-                                if (!commentary) return;
-
-                                const c = new CETEI();
-
-                                const query = `
-                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-
-                SELECT DISTINCT ?seg ?annotator ?work ?book WHERE {
-                <${commentary}> <http://purl.org/dc/elements/1.1/creator> ?annotator_uri ;
-                    <http://example.org/vocabulary/correspondingSeg> ?seg;
-                    <http://example.org/vocabulary/correspondingWork> ?work_uri ;
-                    <http://example.org/vocabulary/correspondingBook> ?book .
-                    ?annotator_uri rdfs:label ?annotator .
-                    ?work_uri rdfs:label ?work .
-                }
-            `;
-
-                                const url = `${endpoint}?query=${encodeURIComponent(query)}&format=json`;
-
-                                fetch(url)
-                                    .then(res => res.json())
-                                    .then(data => {
-                                        console.log(`Commentary ${commentaryIndex + 1} data:`, data);
-
-                                        data.results.bindings.forEach((binding: CommentaryQueryBinding, bindingIndex: number) => {
-                                            const dts_api = `https://humanitext-dts.vercel.app/api/dts/document?id=urn:${binding.annotator.value}.${binding.work.value}:${binding.book.value}&ref=${binding.seg.value}`;
-                                            console.log(`Processing: ${dts_api}`);
-
-                                            c.getHTML5(dts_api, function (data: CETEIDocument) {
-                                                try {
-                                                    const body = data.getElementById(binding.seg.value);
-                                                    if (!body) {
-                                                        console.error(`Body not found for ${binding.seg.value}`);
-                                                        return;
-                                                    }
-
-                                                    const stringBody = body.innerHTML;
-                                                    console.log(`Card ${commentaryIndex + 1}-${bindingIndex + 1} content:`, stringBody);
-
-                                                    // cardを作成（幅制限を追加）
-                                                    const card = document.createElement("div");
-                                                    card.style.marginBottom = "20px";
-                                                    card.style.border = "1px solid #ccc";
-                                                    card.style.borderRadius = "8px";
-                                                    card.style.maxWidth = "100%";
-                                                    card.style.width = "100%";          // 追加: 幅を100%に設定
-                                                    card.style.boxSizing = "border-box"; // 追加: ボックスサイジング
-                                                    card.setAttribute('data-commentary-index', `${commentaryIndex}-${bindingIndex}`);
-
-                                                    // card header（タイトルのみ）を作成
-                                                    const cardHeader = document.createElement("div");
-                                                    cardHeader.style.padding = "15px 20px 10px 20px";
-                                                    cardHeader.style.backgroundColor = "#f8f9fa";
-                                                    cardHeader.style.borderBottom = "1px solid #e9ecef";
-                                                    cardHeader.style.borderRadius = "8px 8px 0 0";
-
-                                                    // card titleを作成
-                                                    const cardTitle = document.createElement("h3");
-                                                    cardTitle.textContent = `${binding.annotator.value}: ${binding.work.value}:${binding.book.value}`;
-                                                    cardTitle.style.fontFamily = "Georgia, 'Times New Roman', Times, serif";
-                                                    cardTitle.style.fontSize = "18px";
-                                                    cardTitle.style.margin = "0";
-                                                    cardTitle.style.fontWeight = "600";
-                                                    cardTitle.style.overflowWrap = "break-word";
-                                                    cardTitle.style.whiteSpace = "normal";
-                                                    cardTitle.style.lineHeight = "1.4";
-                                                    cardTitle.style.maxWidth = "100%";
-
-                                                    // 表示/非表示切り替えボタンを作成
-                                                    const toggleButton = document.createElement("button");
-                                                    toggleButton.textContent = "表示";
-                                                    toggleButton.style.padding = "6px 12px";
-                                                    toggleButton.style.backgroundColor = "#007bff";
-                                                    toggleButton.style.color = "white";
-                                                    toggleButton.style.border = "none";
-                                                    toggleButton.style.borderRadius = "4px";
-                                                    toggleButton.style.cursor = "pointer";
-                                                    toggleButton.style.fontSize = "12px";
-                                                    toggleButton.style.fontWeight = "500";
-                                                    toggleButton.style.marginTop = "10px";
-
-                                                    // card content（本文とボタン）を作成
-                                                    const cardContent = document.createElement("div");
-                                                    cardContent.style.display = "none";
-
-                                                    // card bodyを作成
-                                                    const cardBody = document.createElement("div");
-                                                    // bodyを複製して使用（DOM操作の競合を避けるため）
-                                                    cardBody.appendChild(body.cloneNode(true));
-                                                    cardBody.style.fontFamily = "Georgia, 'Times New Roman', Times, serif";
-                                                    cardBody.style.fontSize = "16px";
-                                                    cardBody.style.overflow = "auto";
-                                                    cardBody.style.maxHeight = "400px";
-                                                    cardBody.style.padding = "20px";
-                                                    cardBody.style.lineHeight = "1.6";
-                                                    cardBody.style.backgroundColor = "#ffffff";
-
-                                                    // レスポンシブ対応版
-const isSmallScreen = window.innerWidth < 768;
-
-// card footerを作成（レスポンシブ対応）
-const cardFooter = document.createElement("div");
-cardFooter.style.padding = isSmallScreen ? "10px 15px" : "15px 20px";
-cardFooter.style.backgroundColor = "#f8f9fa";
-cardFooter.style.borderTop = "1px solid #e9ecef";
-cardFooter.style.borderRadius = "0 0 8px 8px";
-cardFooter.style.display = "flex";
-cardFooter.style.flexWrap = "wrap";
-cardFooter.style.alignItems = "center";
-cardFooter.style.gap = isSmallScreen ? "6px" : "10px";
-cardFooter.style.justifyContent = "flex-start";
-cardFooter.style.maxWidth = "100%";
-
-// 共通のボタンスタイル
-const baseButtonStyle = {
-    fontSize: isSmallScreen ? "12px" : "13px",
-    padding: isSmallScreen ? "5px 10px" : "6px 12px",
-    borderRadius: "4px",
-    cursor: "pointer",
-    fontWeight: "500",
-    border: "none",
-    whiteSpace: "nowrap" as const,
-    flexShrink: "0"
-};
-
-// 言語選択肢を作成（レスポンシブ対応）
-const langSelect = document.createElement("select");
-options.forEach(option => {
-    const opt = document.createElement("option");
-    opt.value = option.id;
-    opt.textContent = option.label;
-    langSelect.appendChild(opt);
-});
-langSelect.value = lang;
-Object.assign(langSelect.style, {
-    fontSize: baseButtonStyle.fontSize,
-    padding: baseButtonStyle.padding,
-    border: "1px solid #ced4da",
-    borderRadius: "4px",
-    backgroundColor: "white",
-    cursor: "pointer",
-    minWidth: isSmallScreen ? "100px" : "120px",
-    maxWidth: isSmallScreen ? "120px" : "150px",
-    flexShrink: "0"
-});
-
-// 翻訳ボタンを作成（レスポンシブ対応）
-const translateButton = document.createElement("button");
-translateButton.textContent = isSmallScreen ? "Trans" : "Translation";
-Object.assign(translateButton.style, baseButtonStyle, {
-    backgroundColor: "#17a2b8",
-    color: "white",
-    minWidth: isSmallScreen ? "50px" : "80px",
-    maxWidth: isSmallScreen ? "70px" : "100px"
-});
-translateButton.addEventListener("click", () => {
-    const currentLang = langSelect.value;
-    commentaryTranslate(stringBody, currentLang);
-});
-
-// 要約ボタンを作成（レスポンシブ対応）
-const summarizeButton = document.createElement("button");
-summarizeButton.textContent = isSmallScreen ? "Sum" : "Summary";
-Object.assign(summarizeButton.style, baseButtonStyle, {
-    backgroundColor: "#17a2b8",
-    color: "white",
-    minWidth: isSmallScreen ? "40px" : "70px",
-    maxWidth: isSmallScreen ? "60px" : "90px"
-});
-summarizeButton.addEventListener("click", () => {
-    const currentLang = langSelect.value;
-    commentarySummarize(stringBody, currentLang);
-});
-
-// URLコピーボタンを作成（レスポンシブ対応）
-const copyUrlButton = document.createElement("button");
-copyUrlButton.textContent = isSmallScreen ? "Copy" : "Copy URL";
-Object.assign(copyUrlButton.style, baseButtonStyle, {
-    backgroundColor: "#6c757d",
-    color: "white",
-    minWidth: isSmallScreen ? "45px" : "70px",
-    maxWidth: isSmallScreen ? "65px" : "90px"
-});
-copyUrlButton.addEventListener("click", () => {
-    copyCommentaryUrl(xmlId);
-});
-
-                                                    // 表示/非表示の切り替え機能
-                                                    let isExpanded = false;
-                                                    toggleButton.addEventListener("click", () => {
-                                                        isExpanded = !isExpanded;
-                                                        if (isExpanded) {
-                                                            cardContent.style.display = "block";
-                                                            toggleButton.textContent = "非表示";
-                                                            toggleButton.style.backgroundColor = "#6c757d";
-                                                        } else {
-                                                            cardContent.style.display = "none";
-                                                            toggleButton.textContent = "表示";
-                                                            toggleButton.style.backgroundColor = "#007bff";
-                                                        }
-                                                    });
-
-                                                    // 要素を組み立て
-                                                    cardHeader.appendChild(cardTitle);
-                                                    cardHeader.appendChild(toggleButton);
-
-                                                    cardFooter.appendChild(langSelect);
-                                                    cardFooter.appendChild(translateButton);
-                                                    cardFooter.appendChild(summarizeButton);
-                                                    cardFooter.appendChild(copyUrlButton);
-
-                                                    cardContent.appendChild(cardBody);
-                                                    cardContent.appendChild(cardFooter);
-
-                                                    card.appendChild(cardHeader);
-                                                    card.appendChild(cardContent);
-
-                                                    // containerに追加
-                                                    container.appendChild(card);
-                                                    console.log(`Card ${commentaryIndex + 1}-${bindingIndex + 1} added to DOM`);
-
-                                                    /*
-                                                    // setCommentaryListを正しいタイミングで実行
-                                                    setCommentaryList(prev => [...prev, {
-                                                        annotator: binding.annotator.value,
-                                                        book: binding.book.value,
-                                                        work: binding.work.value,
-                                                        content: stringBody
-                                                    }]);
-                                                    */
-
-                                                } catch (error) {
-                                                    console.error(`Error processing card ${commentaryIndex + 1}-${bindingIndex + 1}:`, error);
-                                                }
-                                            });
-                                        });
-                                    })
-                                    .catch(error => {
-                                        console.error(`Error fetching commentary ${commentaryIndex + 1}:`, error);
-                                    });
-                            });
-                        }
-                    };
-                    // Google GenAIによる処理
-                    // LLMProcess関数内の修正
-                    const LLMProcess = async (text: string, mode: string, selectedLang: string) => {
-                        try {
-                            let prompt = '';
-                            if (mode === "translate") {
-                                prompt = `Translate the following text to ${selectedLang}: ${text}`;
-                            } else if (mode === "summarize") {
-                                prompt = `Briefly summarize the following text in ${selectedLang}: ${text}`;
-                            }
-
-                            const response = await genAI.models.generateContent({
-                                model: "gemini-2.5-flash",
-                                contents: prompt,
-                                //temperature: 0.5
-                            });
-
-                            if (!response || !response.text) {
-                                throw new Error("No response from the API");
-                            }
-
-                            return response.text;
-                        } catch (error) {
-                            console.error("Error in LLMProcess:", error);
-                            alert("Failed to process the text. Please try again.");
-                            return '';
-                        }
-                    };
-
-                    // commentaryTranslate関数の修正
-                    const commentaryTranslate = (commentaryDesc: string, selectedLang: string) => {
-                        console.log(commentaryDesc);
-                        LLMProcess(commentaryDesc, "translate", selectedLang).then((translatedText) => {
-                            if (translatedText) {
-                                setProcessedText(translatedText);
-                                setIsTransSummDialogOpen(true);
-                            }
-                        });
-                    };
-
-                    // commentarySummarize関数の修正
-                    const commentarySummarize = (commentaryDesc: string, selectedLang: string) => {
-                        console.log(commentaryDesc);
-                        LLMProcess(commentaryDesc, "summarize", selectedLang).then((summarizedText) => {
-                            if (summarizedText) {
-                                setProcessedText(summarizedText);
-                                setIsTransSummDialogOpen(true);
-                            }
-                        });
-                    };
-
-
                 });
-
-
         } else {
             alert("著者、著作、巻数を選択してください。");
         }
 
     };
 
+    const textClicked = useCallback((xmlId: string) => {
+        //const textClicked = (xmlId: string, textsData: { line: string; commentary: string[] }[]) => {
+        // URL更新（ブラウザ履歴に追加）
+        const newUrl = `/reader/${encodeURIComponent(author)}/${encodeURIComponent(work)}/${encodeURIComponent(book)}/${encodeURIComponent(xmlId)}`;
+        window.history.pushState({}, '', newUrl);
+        console.log(newUrl);
+
+        console.log(xmlId);
+        const matchingText = textsRef.current.find((text) => text.line === xmlId);
+
+        //setCommentaryList([]); // commentary_listを初期化
+
+        // containerという要素を取得（1回だけ）
+        const container = document.getElementById("commentary_container");
+
+        // containerのnullチェックを追加
+        if (!container) {
+            console.error("Commentary container not found");
+            return;
+        }
+
+        // コンテナをクリア
+        while (container.firstChild) {
+            container.removeChild(container.firstChild);
+        }
+
+        // matchingTextのundefinedチェックを追加
+        if (!matchingText) {
+            console.warn(`No matching text found for xmlId: ${xmlId}`);
+            // メッセージを表示
+            const noDataMsg = document.createElement("div");
+            noDataMsg.textContent = "No data available for this segment.";
+            noDataMsg.style.padding = "20px";
+            noDataMsg.style.textAlign = "center";
+            noDataMsg.style.color = "#666";
+            container.appendChild(noDataMsg);
+            return;
+        }
+
+        if (matchingText.commentary && matchingText.commentary.length > 0) {
+            console.log(`Found ${matchingText.commentary.length} commentaries`);
+
+            const endpoint = "https://dydra.com/junjun7613/humanitextonto/sparql";
+
+            // 各コメンタリーを順次処理
+            matchingText.commentary.forEach((commentary, commentaryIndex) => {
+                if (!commentary) return;
+
+                const c = new CETEI();
+
+                const query = `
+                                    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                                    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+                                    SELECT DISTINCT ?seg ?annotator ?work ?book WHERE {
+                                    <${commentary}> <http://purl.org/dc/elements/1.1/creator> ?annotator_uri ;
+                                        <http://example.org/vocabulary/correspondingSeg> ?seg;
+                                        <http://example.org/vocabulary/correspondingWork> ?work_uri ;
+                                        <http://example.org/vocabulary/correspondingBook> ?book .
+                                        ?annotator_uri rdfs:label ?annotator .
+                                        ?work_uri rdfs:label ?work .
+                                    }
+                                `;
+
+                const url = `${endpoint}?query=${encodeURIComponent(query)}&format=json`;
+
+                fetch(url)
+                    .then(res => res.json())
+                    .then(data => {
+                        console.log(`Commentary ${commentaryIndex + 1} data:`, data);
+
+                        data.results.bindings.forEach((binding: CommentaryQueryBinding, bindingIndex: number) => {
+                            const dts_api = `https://humanitext-dts.vercel.app/api/dts/document?id=urn:${binding.annotator.value}.${binding.work.value}:${binding.book.value}&ref=${binding.seg.value}`;
+                            console.log(`Processing: ${dts_api}`);
+
+                            c.getHTML5(dts_api, function (data: CETEIDocument) {
+                                try {
+                                    const body = data.getElementById(binding.seg.value);
+                                    if (!body) {
+                                        console.error(`Body not found for ${binding.seg.value}`);
+                                        return;
+                                    }
+
+                                    const stringBody = body.innerHTML;
+                                    console.log(`Card ${commentaryIndex + 1}-${bindingIndex + 1} content:`, stringBody);
+
+                                    // cardを作成（幅制限を追加）
+                                    const card = document.createElement("div");
+                                    card.style.marginBottom = "20px";
+                                    card.style.border = "1px solid #ccc";
+                                    card.style.borderRadius = "8px";
+                                    card.style.maxWidth = "100%";
+                                    card.style.width = "100%";          // 追加: 幅を100%に設定
+                                    card.style.boxSizing = "border-box"; // 追加: ボックスサイジング
+                                    card.setAttribute('data-commentary-index', `${commentaryIndex}-${bindingIndex}`);
+
+                                    // card header（タイトルのみ）を作成
+                                    const cardHeader = document.createElement("div");
+                                    cardHeader.style.padding = "15px 20px 10px 20px";
+                                    cardHeader.style.backgroundColor = "#f8f9fa";
+                                    cardHeader.style.borderBottom = "1px solid #e9ecef";
+                                    cardHeader.style.borderRadius = "8px 8px 0 0";
+
+                                    // card titleを作成
+                                    const cardTitle = document.createElement("h3");
+                                    cardTitle.textContent = `${binding.annotator.value}: ${binding.work.value}:${binding.book.value}`;
+                                    cardTitle.style.fontFamily = "Georgia, 'Times New Roman', Times, serif";
+                                    cardTitle.style.fontSize = "18px";
+                                    cardTitle.style.margin = "0";
+                                    cardTitle.style.fontWeight = "600";
+                                    cardTitle.style.overflowWrap = "break-word";
+                                    cardTitle.style.whiteSpace = "normal";
+                                    cardTitle.style.lineHeight = "1.4";
+                                    cardTitle.style.maxWidth = "100%";
+
+                                    // 表示/非表示切り替えボタンを作成
+                                    const toggleButton = document.createElement("button");
+                                    toggleButton.textContent = "表示";
+                                    toggleButton.style.padding = "6px 12px";
+                                    toggleButton.style.backgroundColor = "#007bff";
+                                    toggleButton.style.color = "white";
+                                    toggleButton.style.border = "none";
+                                    toggleButton.style.borderRadius = "4px";
+                                    toggleButton.style.cursor = "pointer";
+                                    toggleButton.style.fontSize = "12px";
+                                    toggleButton.style.fontWeight = "500";
+                                    toggleButton.style.marginTop = "10px";
+
+                                    // card content（本文とボタン）を作成
+                                    const cardContent = document.createElement("div");
+                                    cardContent.style.display = "none";
+
+                                    // card bodyを作成
+                                    const cardBody = document.createElement("div");
+                                    // bodyを複製して使用（DOM操作の競合を避けるため）
+                                    cardBody.appendChild(body.cloneNode(true));
+                                    cardBody.style.fontFamily = "Georgia, 'Times New Roman', Times, serif";
+                                    cardBody.style.fontSize = "16px";
+                                    cardBody.style.overflow = "auto";
+                                    cardBody.style.maxHeight = "400px";
+                                    cardBody.style.padding = "20px";
+                                    cardBody.style.lineHeight = "1.6";
+                                    cardBody.style.backgroundColor = "#ffffff";
+
+                                    // レスポンシブ対応版
+                                    const isSmallScreen = window.innerWidth < 768;
+
+                                    // card footerを作成（レスポンシブ対応）
+                                    const cardFooter = document.createElement("div");
+                                    cardFooter.style.padding = isSmallScreen ? "10px 15px" : "15px 20px";
+                                    cardFooter.style.backgroundColor = "#f8f9fa";
+                                    cardFooter.style.borderTop = "1px solid #e9ecef";
+                                    cardFooter.style.borderRadius = "0 0 8px 8px";
+                                    cardFooter.style.display = "flex";
+                                    cardFooter.style.flexWrap = "wrap";
+                                    cardFooter.style.alignItems = "center";
+                                    cardFooter.style.gap = isSmallScreen ? "6px" : "10px";
+                                    cardFooter.style.justifyContent = "flex-start";
+                                    cardFooter.style.maxWidth = "100%";
+
+                                    // 共通のボタンスタイル
+                                    const baseButtonStyle = {
+                                        fontSize: isSmallScreen ? "12px" : "13px",
+                                        padding: isSmallScreen ? "5px 10px" : "6px 12px",
+                                        borderRadius: "4px",
+                                        cursor: "pointer",
+                                        fontWeight: "500",
+                                        border: "none",
+                                        whiteSpace: "nowrap" as const,
+                                        flexShrink: "0"
+                                    };
+
+                                    // 言語選択肢を作成（レスポンシブ対応）
+                                    const langSelect = document.createElement("select");
+                                    options.forEach(option => {
+                                        const opt = document.createElement("option");
+                                        opt.value = option.id;
+                                        opt.textContent = option.label;
+                                        langSelect.appendChild(opt);
+                                    });
+                                    langSelect.value = lang;
+                                    Object.assign(langSelect.style, {
+                                        fontSize: baseButtonStyle.fontSize,
+                                        padding: baseButtonStyle.padding,
+                                        border: "1px solid #ced4da",
+                                        borderRadius: "4px",
+                                        backgroundColor: "white",
+                                        cursor: "pointer",
+                                        minWidth: isSmallScreen ? "100px" : "120px",
+                                        maxWidth: isSmallScreen ? "120px" : "150px",
+                                        flexShrink: "0"
+                                    });
+
+                                    // 翻訳ボタンを作成（レスポンシブ対応）
+                                    const translateButton = document.createElement("button");
+                                    translateButton.textContent = isSmallScreen ? "Trans" : "Translation";
+                                    Object.assign(translateButton.style, baseButtonStyle, {
+                                        backgroundColor: "#17a2b8",
+                                        color: "white",
+                                        minWidth: isSmallScreen ? "50px" : "80px",
+                                        maxWidth: isSmallScreen ? "70px" : "100px"
+                                    });
+                                    translateButton.addEventListener("click", () => {
+                                        const currentLang = langSelect.value;
+                                        commentaryTranslate(stringBody, currentLang);
+                                    });
+
+                                    // 要約ボタンを作成（レスポンシブ対応）
+                                    const summarizeButton = document.createElement("button");
+                                    summarizeButton.textContent = isSmallScreen ? "Sum" : "Summary";
+                                    Object.assign(summarizeButton.style, baseButtonStyle, {
+                                        backgroundColor: "#17a2b8",
+                                        color: "white",
+                                        minWidth: isSmallScreen ? "40px" : "70px",
+                                        maxWidth: isSmallScreen ? "60px" : "90px"
+                                    });
+                                    summarizeButton.addEventListener("click", () => {
+                                        const currentLang = langSelect.value;
+                                        commentarySummarize(stringBody, currentLang);
+                                    });
+
+                                    // URLコピーボタンを作成（レスポンシブ対応）
+                                    const copyUrlButton = document.createElement("button");
+                                    copyUrlButton.textContent = isSmallScreen ? "Copy" : "Copy URL";
+                                    Object.assign(copyUrlButton.style, baseButtonStyle, {
+                                        backgroundColor: "#6c757d",
+                                        color: "white",
+                                        minWidth: isSmallScreen ? "45px" : "70px",
+                                        maxWidth: isSmallScreen ? "65px" : "90px"
+                                    });
+                                    copyUrlButton.addEventListener("click", () => {
+                                        copyCommentaryUrl(xmlId);
+                                    });
+
+                                    // 表示/非表示の切り替え機能
+                                    let isExpanded = false;
+                                    toggleButton.addEventListener("click", () => {
+                                        isExpanded = !isExpanded;
+                                        if (isExpanded) {
+                                            cardContent.style.display = "block";
+                                            toggleButton.textContent = "非表示";
+                                            toggleButton.style.backgroundColor = "#6c757d";
+                                        } else {
+                                            cardContent.style.display = "none";
+                                            toggleButton.textContent = "表示";
+                                            toggleButton.style.backgroundColor = "#007bff";
+                                        }
+                                    });
+
+                                    // 要素を組み立て
+                                    cardHeader.appendChild(cardTitle);
+                                    cardHeader.appendChild(toggleButton);
+
+                                    cardFooter.appendChild(langSelect);
+                                    cardFooter.appendChild(translateButton);
+                                    cardFooter.appendChild(summarizeButton);
+                                    cardFooter.appendChild(copyUrlButton);
+
+                                    cardContent.appendChild(cardBody);
+                                    cardContent.appendChild(cardFooter);
+
+                                    card.appendChild(cardHeader);
+                                    card.appendChild(cardContent);
+
+                                    // containerに追加
+                                    container.appendChild(card);
+                                    console.log(`Card ${commentaryIndex + 1}-${bindingIndex + 1} added to DOM`);
+
+                                    /*
+                                    // setCommentaryListを正しいタイミングで実行
+                                    setCommentaryList(prev => [...prev, {
+                                        annotator: binding.annotator.value,
+                                        book: binding.book.value,
+                                        work: binding.work.value,
+                                        content: stringBody
+                                    }]);
+                                    */
+
+                                } catch (error) {
+                                    console.error(`Error processing card ${commentaryIndex + 1}-${bindingIndex + 1}:`, error);
+                                }
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        console.error(`Error fetching commentary ${commentaryIndex + 1}:`, error);
+                    });
+            });
+        }
+    }, [author, work, book]);
+
+
+    // windowオブジェクトに最新のtextClicked関数を登録
+    useEffect(() => {
+        (window as any).currentTextClicked = textClicked;
+    }, [textClicked]);
+
+    // Google GenAIによる処理
+    // LLMProcess関数内の修正
+    const LLMProcess = async (text: string, mode: string, selectedLang: string) => {
+        try {
+            let prompt = '';
+            if (mode === "translate") {
+                prompt = `Translate the following text to ${selectedLang}: ${text}`;
+            } else if (mode === "summarize") {
+                prompt = `Briefly summarize the following text in ${selectedLang}: ${text}`;
+            }
+
+            const response = await genAI.models.generateContent({
+                model: "gemini-2.5-flash",
+                contents: prompt,
+                //temperature: 0.5
+            });
+
+            if (!response || !response.text) {
+                throw new Error("No response from the API");
+            }
+
+            return response.text;
+        } catch (error) {
+            console.error("Error in LLMProcess:", error);
+            alert("Failed to process the text. Please try again.");
+            return '';
+        }
+    };
+
+    // commentaryTranslate関数の修正
+    const commentaryTranslate = (commentaryDesc: string, selectedLang: string) => {
+        console.log(commentaryDesc);
+        LLMProcess(commentaryDesc, "translate", selectedLang).then((translatedText) => {
+            if (translatedText) {
+                setProcessedText(translatedText);
+                setIsTransSummDialogOpen(true);
+            }
+        });
+    };
+
+    // commentarySummarize関数の修正
+    const commentarySummarize = (commentaryDesc: string, selectedLang: string) => {
+        console.log(commentaryDesc);
+        LLMProcess(commentaryDesc, "summarize", selectedLang).then((summarizedText) => {
+            if (summarizedText) {
+                setProcessedText(summarizedText);
+                setIsTransSummDialogOpen(true);
+            }
+        });
+    };
+
     // copyCommentaryUrl関数をここに追加
-    const copyCommentaryUrl = (xmlId: string) => {
+    const copyCommentaryUrl = useCallback((xmlId: string) => {
         const url = `${window.location.origin}/reader/${encodeURIComponent(author)}/${encodeURIComponent(work)}/${encodeURIComponent(book)}/${encodeURIComponent(xmlId)}`;
         navigator.clipboard.writeText(url).then(() => {
             alert('Commentary URL copied to clipboard!');
@@ -804,7 +847,12 @@ copyUrlButton.addEventListener("click", () => {
             document.body.removeChild(textArea);
             alert('Commentary URL copied to clipboard!');
         });
-    };
+    }, [author, work, book]);
+
+    // デバッグ用のuseEffectを追加（状態変更を監視）
+    useEffect(() => {
+        console.log(`State changed: author=${author}, work=${work}, book=${book}`);
+    }, [author, work, book]);
 
     return (
         <main className="w-full min-h-screen bg-white px-2 sm:px-4 md:px-6 lg:px-8 xl:px-12 py-8 box-border">
